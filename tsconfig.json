@@ -1,0 +1,8 @@
+{
+  "extends": "@boilerz/tsconfig",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib"
+  },
+  "exclude": ["**/*.spec.ts", "lib"]
+}

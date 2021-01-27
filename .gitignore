@@ -1,0 +1,14 @@
+# Dependency directories
+node_modules
+
+# Jetbrains IDE
+.idea
+
+# Optional eslint cache
+.eslintcache
+
+# Jest outputs
+coverage
+
+# Output
+lib
