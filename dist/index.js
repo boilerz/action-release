@@ -7306,7 +7306,7 @@ function version(bumpType, githubEmail = process_1.default.env.GITHUB_EMAIL, git
         // git push "${remote_repo}" HEAD:${INPUT_BRANCH} --follow-tags $_FORCE_OPTION $_TAGS;
         const remote = `https://${githubUser || 'boilerz-bot'}:${process_1.default.env.GITHUB_TOKEN}@github.com/${github.context.repo.repo}.git`;
         core.info(`Remote ${remote}`);
-        yield exec.exec('git', ['push', '--force']);
+        yield exec.exec('git', ['push', remote, 'HEAD:master', '--force']);
         yield exec.exec('git', ['push', '--tags']);
     });
 }
