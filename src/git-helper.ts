@@ -89,7 +89,7 @@ export async function version(
   await exec.exec('yarn', ['version', `--${bumpType}`]);
 
   core.info('Pushing release commit message and tag');
-  await exec.exec('git', ['push']);
+  await exec.exec('git', ['push', '--force']);
   await exec.exec('git', ['push', '--tags']);
 }
 

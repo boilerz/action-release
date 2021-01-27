@@ -7301,7 +7301,7 @@ function version(bumpType, githubEmail = process_1.default.env.GITHUB_EMAIL, git
         core.info('Version patch');
         yield exec.exec('yarn', ['version', `--${bumpType}`]);
         core.info('Pushing release commit message and tag');
-        yield exec.exec('git', ['push']);
+        yield exec.exec('git', ['push', '--force']);
         yield exec.exec('git', ['push', '--tags']);
     });
 }
