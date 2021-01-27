@@ -33,3 +33,10 @@ jobs:
         env:
           CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
 
+      - uses: boilerz/action-release@master
+        if: github.ref == 'refs/heads/master'
+        with:
+          publish: 'false'
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_BOILERZ_BOT_TOKEN }}
