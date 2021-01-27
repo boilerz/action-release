@@ -1,11 +1,31 @@
-name: 'Your name here'
-description: 'Provide a description here'
+name: 'Package release'
+description: 'Version, release and publish'
 author: '@boilerz'
 inputs:
-  milliseconds: # change this
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+  baseBranch:
+    required: false
+    description: 'Base (or Master) branch'
+    default: 'master'
+  publishDirectory:
+    required: false
+    description: 'Package directory to publish (eg `dist`)'
+    default: '.'
+  buildStep:
+    required: false
+    description: 'If `true` will run the `build` command in package.json scripts'
+    default: 'false'
+  version:
+    required: false
+    description: 'Will basically turn off this action'
+    default: 'true'
+  release:
+    required: false
+    description: 'Github release flag'
+    default: 'true'
+  publish:
+    required: false
+    description: 'NPM/GITHUB package publish flag'
+    default: 'true'
 runs:
   using: 'node12'
   main: 'dist/index.js'
