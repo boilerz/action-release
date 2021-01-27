@@ -7291,12 +7291,12 @@ function version(bumpType, githubEmail = process_1.default.env.GITHUB_EMAIL, git
         yield exec.exec('git', [
             'config',
             'user.name',
-            `"${githubEmail || '77937117+boilerz-bot@users.noreply.github.com'}"`,
+            `"${githubUser || 'boilerz-bot'}"`,
         ]);
         yield exec.exec('git', [
             'config',
             'user.email',
-            `"${githubUser || 'boilerz-bot'}"`,
+            `"${githubEmail || '77937117+boilerz-bot@users.noreply.github.com'}"`,
         ]);
         core.info('Version patch');
         yield exec.exec('yarn', ['version', `--${bumpType}`]);

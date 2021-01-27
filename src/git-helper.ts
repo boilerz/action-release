@@ -77,12 +77,12 @@ export async function version(
   await exec.exec('git', [
     'config',
     'user.name',
-    `"${githubEmail || '77937117+boilerz-bot@users.noreply.github.com'}"`,
+    `"${githubUser || 'boilerz-bot'}"`,
   ]);
   await exec.exec('git', [
     'config',
     'user.email',
-    `"${githubUser || 'boilerz-bot'}"`,
+    `"${githubEmail || '77937117+boilerz-bot@users.noreply.github.com'}"`,
   ]);
 
   core.info('Version patch');

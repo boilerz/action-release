@@ -10,6 +10,7 @@ import {
   release,
   version,
 } from '../git-helper';
+import * as packageHelper from '../package-helper';
 
 function createCommit(message: string): Commit {
   return {
@@ -137,6 +138,7 @@ describe('git-helper', () => {
           createRelease: createReleaseSpy,
         },
       } as unknown) as InstanceType<typeof GitHub>);
+      jest.spyOn(packageHelper, 'getCurrentVersion').mockResolvedValue('1.0.0');
       jest.spyOn(github.context, 'repo', 'get').mockReturnValue({
         owner: 'jdoe',
         repo: 'foo',
