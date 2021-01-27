@@ -96,8 +96,8 @@ export async function version(
     process.env.GITHUB_TOKEN
   }@github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`;
   core.info(`Remote ${remote}`);
-  await exec.exec('git', ['push', remote, 'HEAD:master', '--force']);
-  await exec.exec('git', ['push', remote, '--tags']);
+  await exec.exec('git', ['push']);
+  await exec.exec('git', ['push', '--tags']);
 }
 
 function formatCommitLine(commit: Commit): string {
