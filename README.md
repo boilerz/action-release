@@ -14,6 +14,8 @@ Basic:
 ```yaml
 steps:
   - uses: actions/checkout@v2
+    with:
+      persist-credentials: false # Required for protected branches
 
   - uses: actions/setup-node@v2
     with:
