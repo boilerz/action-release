@@ -1,0 +1,78 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`git-helper #version should version successfully 1`] = `
+Array [
+  Array [
+    "git",
+    Array [
+      "config",
+      "user.name",
+      "\\"77937117+boilerz-bot@users.noreply.github.com\\"",
+    ],
+  ],
+  Array [
+    "git",
+    Array [
+      "config",
+      "user.email",
+      "\\"boilerz-bot\\"",
+    ],
+  ],
+  Array [
+    "yarn",
+    Array [
+      "version",
+      "--minor",
+    ],
+  ],
+  Array [
+    "git",
+    Array [
+      "push",
+    ],
+  ],
+  Array [
+    "git",
+    Array [
+      "push",
+      "--tags",
+    ],
+  ],
+  Array [
+    "git",
+    Array [
+      "config",
+      "user.name",
+      "\\"john@doe.co\\"",
+    ],
+  ],
+  Array [
+    "git",
+    Array [
+      "config",
+      "user.email",
+      "\\"jdoe\\"",
+    ],
+  ],
+  Array [
+    "yarn",
+    Array [
+      "version",
+      "--minor",
+    ],
+  ],
+  Array [
+    "git",
+    Array [
+      "push",
+    ],
+  ],
+  Array [
+    "git",
+    Array [
+      "push",
+      "--tags",
+    ],
+  ],
+]
+`;
