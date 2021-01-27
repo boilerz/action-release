@@ -94,7 +94,7 @@ export async function version(
   // git push "${remote_repo}" HEAD:${INPUT_BRANCH} --follow-tags $_FORCE_OPTION $_TAGS;
   const remote = `https://${githubUser || 'boilerz-bot'}:${
     process.env.GITHUB_TOKEN
-  }@github.com/${github.context.repo.repo}.git`;
+  }@github.com/boilerz/${github.context.repo.repo}.git`;
   core.info(`Remote ${remote}`);
   await exec.exec('git', ['push', remote, 'HEAD:master', '--force']);
   await exec.exec('git', ['push', '--tags']);
