@@ -1,18 +1,7 @@
-# @boilerz/boilerplate-gh-action
+# @boilerz/action-release
 
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/boilerz/boilerplate-gh-action/blob/master/LICENSE)
-[![GH CI Action](https://github.com/boilerz/boilerplate-gh-action/workflows/CI/badge.svg)](https://github.com/boilerz/boilerplate-gh-action/actions?query=workflow:CI)
-[![codecov](https://codecov.io/gh/boilerz/boilerplate-gh-action/branch/master/graph/badge.svg)](https://codecov.io/gh/boilerz/boilerplate-gh-action)
+[![GitHub package.json version](https://img.shields.io/github/package-json/v/boilerz/action-release)](https://www.npmjs.com/package/@boilerz/action-release)
+[![GH CI Action](https://github.com/boilerz/action-release/workflows/CI/badge.svg)](https://github.com/boilerz/action-release/actions?query=workflow:CI)
+[![codecov](https://codecov.io/gh/boilerz/action-release/branch/master/graph/badge.svg)](https://codecov.io/gh/boilerz/action-release)
 
-> Github action boilerplate.
-
-### Setup
-
-Use as template, then after pulling the repo:
-
-```bash
-yarn install
-yarn custom
-```
-
-2. Add `CODECOV_TOKEN` as a secret.
+> Github action for version, release and publish packages
