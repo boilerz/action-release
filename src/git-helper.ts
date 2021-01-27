@@ -89,6 +89,13 @@ export async function version(
   await exec.exec('yarn', ['version', `--${bumpType}`]);
 
   core.info('Pushing release commit message and tag');
+  // remote_repo="https://${GITHUB_ACTOR}:${INPUT_GITHUB_TOKEN}@github.com/${REPOSITORY}.git"
+  //
+  // git push "${remote_repo}" HEAD:${INPUT_BRANCH} --follow-tags $_FORCE_OPTION $_TAGS;
+  const remote = `https://${githubUser || 'boilerz-bot'}:${
+    process.env.GITHUB_TOKEN
+  }@github.com/${github.context.repo.repo}.git`;
+  core.info(`Remote ${remote}`);
   await exec.exec('git', ['push', '--force']);
   await exec.exec('git', ['push', '--tags']);
 }
