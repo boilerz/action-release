@@ -25,3 +25,4 @@ jobs:
         uses: "pascalgn/automerge-action@v0.13.0"
         env:
           GITHUB_TOKEN: "${{ secrets.GH_BOILERZ_BOT_TOKEN }}"
+          MERGE_COMMIT_MESSAGE:  ":twisted_rightwards_arrows: Merge pull request #{pullRequest.number} - {pullRequest.title}"
