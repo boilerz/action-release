@@ -7301,8 +7301,7 @@ function version(bumpType, githubEmail = process_1.default.env.GITHUB_EMAIL, git
         core.info('Version patch');
         yield exec.exec('yarn', ['version', `--${bumpType}`]);
         core.info('Pushing release commit message and tag');
-        yield exec.exec('git', ['push']);
-        yield exec.exec('git', ['push', '--tags']);
+        yield exec.exec('git', ['push', '--follow-tags']);
     });
 }
 exports.version = version;
@@ -7395,14 +7394,26 @@ exports.release = release;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4351);
+const process_1 = tslib_1.__importDefault(__nccwpck_require__(1765));
 const core = tslib_1.__importStar(__nccwpck_require__(2186));
 const exec = tslib_1.__importStar(__nccwpck_require__(1514));
+const github = tslib_1.__importStar(__nccwpck_require__(5438));
 const gitHelper = tslib_1.__importStar(__nccwpck_require__(1107));
 const packageHelper = tslib_1.__importStar(__nccwpck_require__(3703));
 const package_helper_1 = __nccwpck_require__(3703);
 function run() {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         try {
+            const commits = github.context.payload.commits;
+            const [commit] = commits || [];
+            const botActor = process_1.default.env.GITHUB_USER || 'boilerz-bot';
+            if (commit &&
+                commits.length === 1 &&
+                commit.message.startsWith(':bookmark:') &&
+                github.context.actor === botActor) {
+                core.info(`Skipping, version commit pushed by ${botActor}`);
+                return;
+            }
             if (core.getInput('version') !== 'true') {
                 core.warning('Skipping version (flag false), release and publish');
                 return;

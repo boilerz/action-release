@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import * as github from '@actions/github';
 
 import * as gitHelper from '../git-helper';
 import run from '../main';
@@ -56,6 +57,26 @@ describe('gh action', () => {
     expect(warningSpy).toHaveBeenCalledWith(
       'Current branch: foo, releasing only from master',
     );
+  });
+
+  it('should skip if the only one commit is a version commit pushed by the bot', async () => {
+    const originalCommits = github.context.payload.commits;
+    const originalActor = github.context.actor;
+    const infoSpy = jest.spyOn(core, 'info');
+    github.context.actor = process.env.GITHUB_USER || 'boilerz-bot';
+    github.context.payload.commits = [
+      {
+        message: ':bookmark: v0.0.1',
+      },
+    ];
+
+    await run();
+
+    expect(infoSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/Skipping, version commit pushed by .*/),
+    );
+    github.context.payload.commits = originalCommits;
+    github.context.actor = originalActor;
   });
 
   it('should version successfully', async () => {

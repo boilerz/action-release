@@ -1,12 +1,29 @@
+import process from 'process';
+
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
+import * as github from '@actions/github';
 
 import * as gitHelper from './git-helper';
+import { Commit } from './git-helper';
 import * as packageHelper from './package-helper';
 import { Registry } from './package-helper';
 
 export default async function run(): Promise<void> {
   try {
+    const commits = github.context.payload.commits as Commit[];
+    const [commit] = commits || [];
+    const botActor = process.env.GITHUB_USER || 'boilerz-bot';
+    if (
+      commit &&
+      commits.length === 1 &&
+      commit.message.startsWith(':bookmark:') &&
+      github.context.actor === botActor
+    ) {
+      core.info(`Skipping, version commit pushed by ${botActor}`);
+      return;
+    }
+
     if (core.getInput('version') !== 'true') {
       core.warning('Skipping version (flag false), release and publish');
       return;

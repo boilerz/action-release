@@ -2,6 +2,7 @@ name: CI
 on: push
 jobs:
   build:
+    if: "!contains(github.event.head_commit.message, ':bookmark:')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -36,7 +37,6 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - uses: boilerz/action-release@master
-        if: github.ref == 'refs/heads/master'
         with:
           publish: 'false'
         env:

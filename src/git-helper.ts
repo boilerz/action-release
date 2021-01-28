@@ -1,5 +1,6 @@
 import * as os from 'os';
 import process from 'process';
+
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import * as github from '@actions/github';
@@ -88,8 +89,7 @@ export async function version(
   await exec.exec('yarn', ['version', `--${bumpType}`]);
 
   core.info('Pushing release commit message and tag');
-  await exec.exec('git', ['push']);
-  await exec.exec('git', ['push', '--tags']);
+  await exec.exec('git', ['push', '--follow-tags']);
 }
 
 function formatCommitLine(commit: Commit): string {
