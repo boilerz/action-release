@@ -5,6 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GH_BOILERZ_BOT_TOKEN }}
 
       - uses: actions/setup-node@v2
         with:
@@ -31,7 +33,7 @@ jobs:
       - name: Send coverage
         run: yarn codecov
         env:
-          CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - uses: boilerz/action-release@master
         if: github.ref == 'refs/heads/master'

@@ -1,6 +1,7 @@
 import * as exec from '@actions/exec';
 import * as github from '@actions/github';
 import { GitHub } from '@actions/github/lib/utils';
+import MockDate from 'mockdate';
 
 import {
   Commit,
@@ -21,6 +22,8 @@ function createCommit(message: string): Commit {
 }
 
 describe('git-helper', () => {
+  afterEach(MockDate.reset);
+
   describe('#getCurrentBranch', () => {
     it('should failed to detect branch without ref', () => {
       expect(
@@ -130,6 +133,7 @@ describe('git-helper', () => {
     });
 
     it('should release successfully', async () => {
+      MockDate.set(new Date(0));
       const createReleaseSpy = jest.fn().mockResolvedValue({
         data: { id: '42' },
       });
@@ -158,7 +162,7 @@ describe('git-helper', () => {
 
         ",
                 "draft": false,
-                "name": "1.0.0 (January 27, 2021)",
+                "name": "1.0.0 (January 01, 1970)",
                 "owner": "jdoe",
                 "prerelease": false,
                 "repo": "foo",
