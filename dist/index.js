@@ -7260,6 +7260,19 @@ var CommitType;
     CommitType["MERGE"] = ":twisted_rightwards_arrows:";
     CommitType["OTHER"] = ":card_file_box:";
 })(CommitType || (CommitType = {}));
+function isBranchBehind() {
+    return tslib_1.__awaiter(this, void 0, void 0, function* () {
+        let isBehind = false;
+        yield exec.exec('git', ['status', '-uno'], {
+            listeners: {
+                stdout(data) {
+                    isBehind = data.toString().includes('is behind');
+                },
+            },
+        });
+        return isBehind;
+    });
+}
 function getCurrentBranch(githubRef = process_1.default.env.GITHUB_REF) {
     if (!githubRef)
         throw new Error('Failed to detect branch');
@@ -7300,8 +7313,13 @@ function version(bumpType, githubEmail = process_1.default.env.GITHUB_EMAIL, git
         ]);
         core.info('Version patch');
         yield exec.exec('yarn', ['version', `--${bumpType}`]);
+        if (yield isBranchBehind()) {
+            core.info('Skipping this release, branch behind master');
+            return false;
+        }
         core.info('Pushing release commit message and tag');
         yield exec.exec('git', ['push', '--follow-tags']);
+        return true;
     });
 }
 exports.version = version;
@@ -7427,7 +7445,8 @@ function run() {
             core.info('Detecting bump type given branch/commit');
             const bumpType = gitHelper.detectBumpType();
             core.info(`Versioning a ${bumpType}`);
-            yield gitHelper.version(bumpType);
+            if (!(yield gitHelper.version(bumpType)))
+                return;
             if (core.getInput('release') === 'true') {
                 core.info('Releasing');
                 yield gitHelper.release();

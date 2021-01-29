@@ -28,6 +28,18 @@ Array [
   Array [
     "git",
     Array [
+      "status",
+      "-uno",
+    ],
+    Object {
+      "listeners": Object {
+        "stdout": [Function],
+      },
+    },
+  ],
+  Array [
+    "git",
+    Array [
       "push",
       "--follow-tags",
     ],
@@ -54,6 +66,18 @@ Array [
       "version",
       "--minor",
     ],
+  ],
+  Array [
+    "git",
+    Array [
+      "status",
+      "-uno",
+    ],
+    Object {
+      "listeners": Object {
+        "stdout": [Function],
+      },
+    },
   ],
   Array [
     "git",

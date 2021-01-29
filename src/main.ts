@@ -42,7 +42,7 @@ export default async function run(): Promise<void> {
     const bumpType = gitHelper.detectBumpType();
 
     core.info(`Versioning a ${bumpType}`);
-    await gitHelper.version(bumpType);
+    if (!(await gitHelper.version(bumpType))) return;
 
     if (core.getInput('release') === 'true') {
       core.info('Releasing');

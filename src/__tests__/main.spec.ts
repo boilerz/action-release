@@ -20,7 +20,7 @@ describe('gh action', () => {
 
   beforeEach(() => {
     execSpy = jest.spyOn(exec, 'exec').mockResolvedValue(0); // For safety
-    versionSpy = jest.spyOn(gitHelper, 'version').mockResolvedValue();
+    versionSpy = jest.spyOn(gitHelper, 'version').mockResolvedValue(true);
     releaseSpy = jest.spyOn(gitHelper, 'release').mockResolvedValue();
     publishSpy = jest.spyOn(packageHelper, 'publish').mockResolvedValue();
   });

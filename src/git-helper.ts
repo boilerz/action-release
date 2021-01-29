@@ -35,6 +35,18 @@ export interface Commit {
 
 export type BumpType = 'patch' | 'minor' | 'major';
 
+async function isBranchBehind(): Promise<boolean> {
+  let isBehind = false;
+  await exec.exec('git', ['status', '-uno'], {
+    listeners: {
+      stdout(data: Buffer): void {
+        isBehind = data.toString().includes('is behind');
+      },
+    },
+  });
+  return isBehind;
+}
+
 export function getCurrentBranch(
   githubRef: string | undefined = process.env.GITHUB_REF,
 ): string {
@@ -72,7 +84,7 @@ export async function version(
   bumpType: BumpType,
   githubEmail: string | undefined = process.env.GITHUB_EMAIL,
   githubUser: string | undefined = process.env.GITHUB_USER,
-): Promise<void> {
+): Promise<boolean> {
   core.info('Setting git config');
   await exec.exec('git', [
     'config',
@@ -88,8 +100,14 @@ export async function version(
   core.info('Version patch');
   await exec.exec('yarn', ['version', `--${bumpType}`]);
 
+  if (await isBranchBehind()) {
+    core.info('Skipping this release, branch behind master');
+    return false;
+  }
+
   core.info('Pushing release commit message and tag');
   await exec.exec('git', ['push', '--follow-tags']);
+  return true;
 }
 
 function formatCommitLine(commit: Commit): string {

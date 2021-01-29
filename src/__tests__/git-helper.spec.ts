@@ -77,10 +77,28 @@ describe('git-helper', () => {
     });
 
     it('should version successfully', async () => {
-      await version('minor');
-      await version('minor', 'john@doe.co', 'jdoe');
+      expect(await version('minor')).toBe(true);
+      expect(await version('minor', 'john@doe.co', 'jdoe')).toBe(true);
 
       expect(execSpy.mock.calls).toMatchSnapshot();
+    });
+
+    it('should skip version is branch is behind', async () => {
+      execSpy.mockRestore();
+      jest.spyOn(exec, 'exec').mockImplementation(
+        async (command, args, options): Promise<number> => {
+          if (command === 'git' && (args || []).includes('-uno')) {
+            const stdout = Buffer.from(
+              `Your branch is behind 'origin/master' by 6 commits, and can be fast-forwarded.`,
+              'utf-8',
+            );
+            options?.listeners?.stdout?.(stdout);
+          }
+          return 0;
+        },
+      );
+
+      expect(await version('minor')).toBe(false);
     });
   });
 
