@@ -9,6 +9,14 @@ jobs:
         with:
           token: ${{ secrets.GH_BOILERZ_BOT_TOKEN }}
 
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v3
+        with:
+          gpg-private-key: ${{ secrets.GH_BOILERZ_BOT_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GH_BOILERZ_BOT_GPG_PASSPHRASE }}
+          git-user-signingkey: true
+          git-commit-gpgsign: true
+
       - uses: actions/setup-node@v2
         with:
           node-version: '12.x'
