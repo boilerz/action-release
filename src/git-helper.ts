@@ -21,6 +21,10 @@ enum CommitType {
   OTHER = ':card_file_box:',
 }
 
+enum PullRequestLabel {
+  DEPENDENCIES = 'dependencies',
+}
+
 export interface Commit {
   author: User;
   committer: User;
@@ -34,6 +38,21 @@ export interface Commit {
 }
 
 export type BumpType = 'patch' | 'minor' | 'major';
+
+export async function hasPendingDependencyPRsOpen(
+  githubToken = process.env.GITHUB_TOKEN,
+): Promise<boolean> {
+  if (!githubToken) throw new Error('Missing GITHUB_TOKEN');
+
+  const { repo, owner } = github.context.repo;
+  const { data: openPRs } = await github
+    .getOctokit(githubToken)
+    .pulls.list({ repo, owner, state: 'open' });
+
+  return openPRs.some((pr) =>
+    pr.labels.some((label) => label.name === PullRequestLabel.DEPENDENCIES),
+  );
+}
 
 async function isBranchBehind(): Promise<boolean> {
   let isBehind = false;
@@ -54,7 +73,7 @@ export function getCurrentBranch(
 
   const currentBranch = /refs\/[a-zA-Z]+\/(.*)/.exec(githubRef);
   if (!currentBranch || currentBranch?.length < 2) {
-    core.error(`Malformed branch ${currentBranch}`);
+    core.error(`🙊 Malformed branch ${currentBranch}`);
     throw new Error('Cannot retrieve branch name from GITHUB_REF');
   }
 
@@ -85,7 +104,7 @@ export async function version(
   githubEmail: string | undefined = process.env.GITHUB_EMAIL,
   githubUser: string | undefined = process.env.GITHUB_USER,
 ): Promise<boolean> {
-  core.info('Setting git config');
+  core.info('📒 Setting git config');
   await exec.exec('git', [
     'config',
     'user.name',
@@ -97,15 +116,12 @@ export async function version(
     `"${githubEmail || '77937117+boilerz-bot@users.noreply.github.com'}"`,
   ]);
 
-  core.info('Version patch');
+  core.info('🔖 Version patch');
   await exec.exec('yarn', ['version', `--${bumpType}`]);
 
-  if (await isBranchBehind()) {
-    core.info('Skipping this release, branch behind master');
-    return false;
-  }
+  if (await isBranchBehind()) return false;
 
-  core.info('Pushing release commit message and tag');
+  core.info('📌 Pushing release commit message and tag');
   await exec.exec('git', ['push', '--follow-tags']);
   return true;
 }
@@ -223,5 +239,5 @@ export async function release(
     prerelease: false,
   });
 
-  core.info(`Release done: ${releaseId}`);
+  core.info(`📝 Release done: ${releaseId}`);
 }

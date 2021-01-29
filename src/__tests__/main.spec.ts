@@ -43,7 +43,7 @@ describe('gh action', () => {
     await run();
 
     expect(warningSpy).toHaveBeenCalledWith(
-      'Skipping version (flag false), release and publish',
+      '🚩 Skipping version (flag false), release and publish',
     );
   });
 
@@ -55,7 +55,7 @@ describe('gh action', () => {
     await run();
 
     expect(warningSpy).toHaveBeenCalledWith(
-      'Current branch: foo, releasing only from master',
+      '🚫 Current branch: foo, releasing only from master',
     );
   });
 
@@ -83,6 +83,9 @@ describe('gh action', () => {
     mockInputs({ version: 'true', baseBranch: 'master' });
     jest.spyOn(gitHelper, 'getCurrentBranch').mockReturnValue('master');
     jest.spyOn(gitHelper, 'detectBumpType').mockReturnValue('patch');
+    jest
+      .spyOn(gitHelper, 'hasPendingDependencyPRsOpen')
+      .mockResolvedValue(false);
 
     await run();
 
@@ -95,6 +98,9 @@ describe('gh action', () => {
     mockInputs({ version: 'true', release: 'true', baseBranch: 'master' });
     jest.spyOn(gitHelper, 'getCurrentBranch').mockReturnValue('master');
     jest.spyOn(gitHelper, 'detectBumpType').mockReturnValue('patch');
+    jest
+      .spyOn(gitHelper, 'hasPendingDependencyPRsOpen')
+      .mockResolvedValue(false);
 
     await run();
 
@@ -112,6 +118,9 @@ describe('gh action', () => {
     });
     jest.spyOn(gitHelper, 'getCurrentBranch').mockReturnValue('master');
     jest.spyOn(gitHelper, 'detectBumpType').mockReturnValue('patch');
+    jest
+      .spyOn(gitHelper, 'hasPendingDependencyPRsOpen')
+      .mockResolvedValue(false);
     const setupNpmRcForPublishSpy = jest
       .spyOn(packageHelper, 'setupNpmRcForPublish')
       .mockResolvedValue();
@@ -134,6 +143,9 @@ describe('gh action', () => {
     });
     jest.spyOn(gitHelper, 'getCurrentBranch').mockReturnValue('main');
     jest.spyOn(gitHelper, 'detectBumpType').mockReturnValue('minor');
+    jest
+      .spyOn(gitHelper, 'hasPendingDependencyPRsOpen')
+      .mockResolvedValue(false);
     const setupNpmRcForPublishSpy = jest
       .spyOn(packageHelper, 'setupNpmRcForPublish')
       .mockResolvedValue();

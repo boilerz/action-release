@@ -20,12 +20,12 @@ export default async function run(): Promise<void> {
       commit.message.startsWith(':bookmark:') &&
       github.context.actor === botActor
     ) {
-      core.info(`Skipping, version commit pushed by ${botActor}`);
+      core.info(`🤖 Skipping, version commit pushed by ${botActor}`);
       return;
     }
 
     if (core.getInput('version') !== 'true') {
-      core.warning('Skipping version (flag false), release and publish');
+      core.warning('🚩 Skipping version (flag false), release and publish');
       return;
     }
 
@@ -33,33 +33,41 @@ export default async function run(): Promise<void> {
     const currentBranch = gitHelper.getCurrentBranch();
     if (currentBranch !== baseBranch) {
       core.warning(
-        `Current branch: ${currentBranch}, releasing only from ${baseBranch}`,
+        `🚫 Current branch: ${currentBranch}, releasing only from ${baseBranch}`,
       );
       return;
     }
 
-    core.info('Detecting bump type given branch/commit');
+    if (await gitHelper.hasPendingDependencyPRsOpen()) {
+      core.warning('🚧 Skipping, found dependencies PRs open');
+      return;
+    }
+
+    core.info('⬆️ Detecting bump type given branch/commit');
     const bumpType = gitHelper.detectBumpType();
 
-    core.info(`Versioning a ${bumpType}`);
-    if (!(await gitHelper.version(bumpType))) return;
+    core.info(`🔖 Versioning a ${bumpType}`);
+    if (!(await gitHelper.version(bumpType))) {
+      core.info('Skipping this release, branch behind master');
+      return;
+    }
 
     if (core.getInput('release') === 'true') {
-      core.info('Releasing');
+      core.info('📝 Releasing');
       await gitHelper.release();
     }
 
     if (core.getInput('publish') === 'true') {
       if (core.getInput('buildStep') === 'true') {
-        core.info('Extra build step');
+        core.info('🛠 Extra build step');
         await exec.exec('yarn', ['build']);
       }
 
-      core.info('Setting npm rc for publish');
+      core.info('📒 Setting npmrc for publish');
       await packageHelper.setupNpmRcForPublish();
 
       const publishDirectory = core.getInput('publishDirectory');
-      core.info(`Trying to publish from ${publishDirectory}`);
+      core.info(`📦 Trying to publish from ${publishDirectory}`);
       await packageHelper.publish(Registry.GITHUB, publishDirectory);
       await packageHelper.publish(Registry.NPM, publishDirectory);
     }

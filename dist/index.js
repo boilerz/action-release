@@ -7244,7 +7244,7 @@ function wrappy (fn, cb) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.release = exports.createReleaseBody = exports.version = exports.detectBumpType = exports.getCurrentBranch = void 0;
+exports.release = exports.createReleaseBody = exports.version = exports.detectBumpType = exports.getCurrentBranch = exports.hasPendingDependencyPRsOpen = void 0;
 const tslib_1 = __nccwpck_require__(4351);
 const os = tslib_1.__importStar(__nccwpck_require__(2087));
 const process_1 = tslib_1.__importDefault(__nccwpck_require__(1765));
@@ -7260,6 +7260,22 @@ var CommitType;
     CommitType["MERGE"] = ":twisted_rightwards_arrows:";
     CommitType["OTHER"] = ":card_file_box:";
 })(CommitType || (CommitType = {}));
+var PullRequestLabel;
+(function (PullRequestLabel) {
+    PullRequestLabel["DEPENDENCIES"] = "dependencies";
+})(PullRequestLabel || (PullRequestLabel = {}));
+function hasPendingDependencyPRsOpen(githubToken = process_1.default.env.GITHUB_TOKEN) {
+    return tslib_1.__awaiter(this, void 0, void 0, function* () {
+        if (!githubToken)
+            throw new Error('Missing GITHUB_TOKEN');
+        const { repo, owner } = github.context.repo;
+        const { data: openPRs } = yield github
+            .getOctokit(githubToken)
+            .pulls.list({ repo, owner, state: 'open' });
+        return openPRs.some((pr) => pr.labels.some((label) => label.name === PullRequestLabel.DEPENDENCIES));
+    });
+}
+exports.hasPendingDependencyPRsOpen = hasPendingDependencyPRsOpen;
 function isBranchBehind() {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         let isBehind = false;
@@ -7278,7 +7294,7 @@ function getCurrentBranch(githubRef = process_1.default.env.GITHUB_REF) {
         throw new Error('Failed to detect branch');
     const currentBranch = /refs\/[a-zA-Z]+\/(.*)/.exec(githubRef);
     if (!currentBranch || (currentBranch === null || currentBranch === void 0 ? void 0 : currentBranch.length) < 2) {
-        core.error(`Malformed branch ${currentBranch}`);
+        core.error(`🙊 Malformed branch ${currentBranch}`);
         throw new Error('Cannot retrieve branch name from GITHUB_REF');
     }
     return currentBranch[1];
@@ -7300,7 +7316,7 @@ function detectBumpType(commits = github.context.payload.commits) {
 exports.detectBumpType = detectBumpType;
 function version(bumpType, githubEmail = process_1.default.env.GITHUB_EMAIL, githubUser = process_1.default.env.GITHUB_USER) {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        core.info('Setting git config');
+        core.info('📒 Setting git config');
         yield exec.exec('git', [
             'config',
             'user.name',
@@ -7311,13 +7327,11 @@ function version(bumpType, githubEmail = process_1.default.env.GITHUB_EMAIL, git
             'user.email',
             `"${githubEmail || '77937117+boilerz-bot@users.noreply.github.com'}"`,
         ]);
-        core.info('Version patch');
+        core.info('🔖 Version patch');
         yield exec.exec('yarn', ['version', `--${bumpType}`]);
-        if (yield isBranchBehind()) {
-            core.info('Skipping this release, branch behind master');
+        if (yield isBranchBehind())
             return false;
-        }
-        core.info('Pushing release commit message and tag');
+        core.info('📌 Pushing release commit message and tag');
         yield exec.exec('git', ['push', '--follow-tags']);
         return true;
     });
@@ -7396,7 +7410,7 @@ function release(githubToken = process_1.default.env.GITHUB_TOKEN, commits = git
             draft: false,
             prerelease: false,
         });
-        core.info(`Release done: ${releaseId}`);
+        core.info(`📝 Release done: ${releaseId}`);
     });
 }
 exports.release = release;
@@ -7429,37 +7443,43 @@ function run() {
                 commits.length === 1 &&
                 commit.message.startsWith(':bookmark:') &&
                 github.context.actor === botActor) {
-                core.info(`Skipping, version commit pushed by ${botActor}`);
+                core.info(`🤖 Skipping, version commit pushed by ${botActor}`);
                 return;
             }
             if (core.getInput('version') !== 'true') {
-                core.warning('Skipping version (flag false), release and publish');
+                core.warning('🚩 Skipping version (flag false), release and publish');
                 return;
             }
             const baseBranch = core.getInput('baseBranch');
             const currentBranch = gitHelper.getCurrentBranch();
             if (currentBranch !== baseBranch) {
-                core.warning(`Current branch: ${currentBranch}, releasing only from ${baseBranch}`);
+                core.warning(`🚫 Current branch: ${currentBranch}, releasing only from ${baseBranch}`);
                 return;
             }
-            core.info('Detecting bump type given branch/commit');
-            const bumpType = gitHelper.detectBumpType();
-            core.info(`Versioning a ${bumpType}`);
-            if (!(yield gitHelper.version(bumpType)))
+            if (yield gitHelper.hasPendingDependencyPRsOpen()) {
+                core.warning('🚧 Skipping, found dependencies PRs open');
                 return;
+            }
+            core.info('⬆️ Detecting bump type given branch/commit');
+            const bumpType = gitHelper.detectBumpType();
+            core.info(`🔖 Versioning a ${bumpType}`);
+            if (!(yield gitHelper.version(bumpType))) {
+                core.info('Skipping this release, branch behind master');
+                return;
+            }
             if (core.getInput('release') === 'true') {
-                core.info('Releasing');
+                core.info('📝 Releasing');
                 yield gitHelper.release();
             }
             if (core.getInput('publish') === 'true') {
                 if (core.getInput('buildStep') === 'true') {
-                    core.info('Extra build step');
+                    core.info('🛠 Extra build step');
                     yield exec.exec('yarn', ['build']);
                 }
-                core.info('Setting npm rc for publish');
+                core.info('📒 Setting npmrc for publish');
                 yield packageHelper.setupNpmRcForPublish();
                 const publishDirectory = core.getInput('publishDirectory');
-                core.info(`Trying to publish from ${publishDirectory}`);
+                core.info(`📦 Trying to publish from ${publishDirectory}`);
                 yield packageHelper.publish(package_helper_1.Registry.GITHUB, publishDirectory);
                 yield packageHelper.publish(package_helper_1.Registry.NPM, publishDirectory);
             }
@@ -7504,7 +7524,7 @@ var Registry;
 function getCurrentVersion() {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         const packageJsonPath = path_1.default.resolve(process_1.default.cwd(), 'package.json');
-        core.debug(`package.json path: ${packageJsonPath}`);
+        core.debug(`📦 package.json path: ${packageJsonPath}`);
         const packageData = yield readFileAsync(packageJsonPath, 'utf8');
         const { version } = JSON.parse(packageData);
         return version;
@@ -7559,9 +7579,9 @@ function setupNpmRcForPublish() {
 exports.setupNpmRcForPublish = setupNpmRcForPublish;
 function publish(registry, directory = '.') {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        core.debug(`Setting config registry at ${registry}`);
+        core.debug(`📒 Setting config registry at ${registry}`);
         yield exec.exec('npm', ['config', 'set', 'registry', registry]);
-        core.info(`Publishing to ${registry}`);
+        core.info(`📦 Publishing to ${registry}`);
         yield exec.exec('npm', ['publish', directory, '--access', 'public']);
     });
 }
