@@ -330,15 +330,15 @@
   resolved "https://registry.yarnpkg.com/@boilerz/build-tools/-/build-tools-1.4.6.tgz#1d30c2484a45008be7daf4a713df0b894fea5bed"
   integrity sha512-Z2LfXaGC995QUTAbrGPDYf+KKZORxbU78rh3ALWf/aRiuf6akY67nga9lMCTfzdiY2OhwCVoH+ZCG3NIkFJOhg==
 
-"@boilerz/eslint-config@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@boilerz/eslint-config/-/eslint-config-2.0.1.tgz#44d0174b00c9ddcc3079b3270ec27fabbe511559"
-  integrity sha512-uK+jN2PavlQjothvHz5VPM+h2OGwERdyd3dhSpABVRNxLdxREa3TbdvR7WFnHo5eq56ui8jT+oU6ZSS/pbXLdg==
+"@boilerz/eslint-config@^2.0.3":
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/@boilerz/eslint-config/-/eslint-config-2.0.3.tgz#9ea6784ce38088fea9cb241904e84d105750bc12"
+  integrity sha512-X71xBYeo6kPgz6yOdZn7yINmJMWD57TqtTRzVhhFLWV2QsB9c7aItK7siSDeML8GGm9WFEVGAw/eYvLR1NvMww==
   dependencies:
     "@typescript-eslint/eslint-plugin" "^2.34.0"
     "@typescript-eslint/parser" "^2.34.0"
     eslint-config-airbnb "^18.2.1"
-    eslint-config-prettier "^6.15.0"
+    eslint-config-prettier "^7.2.0"
     eslint-plugin-import "^2.22.1"
     eslint-plugin-jsx-a11y "^6.4.1"
     eslint-plugin-prettier "^3.3.1"
@@ -1805,12 +1805,10 @@ eslint-config-airbnb@^18.2.1:
     object.assign "^4.1.2"
     object.entries "^1.1.2"
 
-eslint-config-prettier@^6.15.0:
-  version "6.15.0"
-  resolved "https://registry.yarnpkg.com/eslint-config-prettier/-/eslint-config-prettier-6.15.0.tgz#7f93f6cb7d45a92f1537a70ecc06366e1ac6fed9"
-  integrity sha512-a1+kOYLR8wMGustcgAjdydMsQ2A/2ipRPwRKUmfYaSxc9ZPcrku080Ctl6zrZzZNs/U82MjSv+qKREkoq3bJaw==
-  dependencies:
-    get-stdin "^6.0.0"
+eslint-config-prettier@^7.2.0:
+  version "7.2.0"
+  resolved "https://registry.yarnpkg.com/eslint-config-prettier/-/eslint-config-prettier-7.2.0.tgz#f4a4bd2832e810e8cc7c1411ec85b3e85c0c53f9"
+  integrity sha512-rV4Qu0C3nfJKPOAhFujFxB7RMP+URFyQqqOZW9DMRD7ZDTFyjaIlETU3xzHELt++4ugC0+Jm084HQYkkJe+Ivg==
 
 eslint-import-resolver-node@^0.3.4:
   version "0.3.4"
@@ -2291,11 +2289,6 @@ get-intrinsic@^1.0.1, get-intrinsic@^1.0.2:
     function-bind "^1.1.1"
     has "^1.0.3"
     has-symbols "^1.0.1"
-
-get-stdin@^6.0.0:
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/get-stdin/-/get-stdin-6.0.0.tgz#9e09bf712b360ab9225e812048f71fde9c89657b"
-  integrity sha512-jp4tHawyV7+fkkSKyvjuLZswblUtz+SQKzSWnBbii16BuZksJlU1wuBYXY75r+duh/llF1ur6oNwi+2ZzjKZ7g==
 
 get-stream@^4.0.0:
   version "4.1.0"
