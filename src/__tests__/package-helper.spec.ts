@@ -4,14 +4,14 @@ import path from 'path';
 import * as exec from '@actions/exec';
 
 import {
+  getCurrentVersion,
   publish,
   readNpmRc,
   Registry,
-  // setupNpmRcForPublish,
+  setupNpmRcForPublish,
   updateNpmRcForPublish,
   writeNpmRc,
 } from '../package-helper';
-import * as packageHelper from '../package-helper';
 
 describe('package-helper', () => {
   const npmRcSampleFileRecord: Record<string, string> = {
@@ -22,6 +22,14 @@ describe('package-helper', () => {
     // eslint-disable-next-line no-template-curly-in-string
     '//registry.npmjs.org/:_authToken': '${NPM_TOKEN}',
   };
+
+  describe('#getCurrentVersion', () => {
+    it('should return package version', async () => {
+      expect(await getCurrentVersion()).toEqual(
+        expect.stringMatching(/\d\.\d\.\d/),
+      );
+    });
+  });
 
   describe('#readNpmRc', () => {
     it('should return null if file does not exists', async () => {
@@ -81,7 +89,7 @@ describe('package-helper', () => {
         npmrcCopy,
       );
       jest.spyOn(path, 'resolve').mockReturnValueOnce(npmrcCopy);
-      await packageHelper.setupNpmRcForPublish();
+      await setupNpmRcForPublish();
 
       expect(fs.readFileSync(npmrcCopy, 'utf8')).toMatchInlineSnapshot(`
         "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}

@@ -4,24 +4,37 @@ import { GitHub } from '@actions/github/lib/utils';
 import MockDate from 'mockdate';
 
 import {
-  Commit,
+  EnhancedCommit,
   createReleaseBody,
   detectBumpType,
   getCurrentBranch,
   release,
   version,
+  areDiffWorthRelease,
+  File,
+  retrieveChangesSinceLastRelease,
+  hasPendingDependencyPRsOpen,
 } from '../git-helper';
 import * as packageHelper from '../package-helper';
+import { comparison, files } from './__fixtures/comparison';
 
-function createCommit(message: string): Commit {
+function createCommit(message: string, sha?: string): EnhancedCommit {
   return {
-    id: 'bac6aee2d316d65025022f9e84f12eb2ffcb34ac',
-    url: 'http://somewhere.web',
-    message,
-  } as Commit;
+    sha: sha || 'bac6aee2d316d65025022f9e84f12eb2ffcb34ac',
+    commit: {
+      url: 'http://somewhere.web',
+      message,
+    },
+  } as EnhancedCommit;
 }
 
 describe('git-helper', () => {
+  beforeEach(() => {
+    jest.spyOn(github.context, 'repo', 'get').mockReturnValue({
+      owner: 'jdoe',
+      repo: 'foo',
+    });
+  });
   afterEach(MockDate.reset);
 
   describe('#getCurrentBranch', () => {
@@ -46,9 +59,6 @@ describe('git-helper', () => {
 
   describe('#detectBumpType', () => {
     it('should failed to detect bump type with not enough commits', () => {
-      expect(
-        detectBumpType.bind(null, null),
-      ).toThrowErrorMatchingInlineSnapshot(`"Failed to access commits"`);
       expect(detectBumpType.bind(null, [])).toThrowErrorMatchingInlineSnapshot(
         `"Failed to access commits"`,
       );
@@ -77,10 +87,28 @@ describe('git-helper', () => {
     });
 
     it('should version successfully', async () => {
-      await version('minor');
-      await version('minor', 'john@doe.co', 'jdoe');
+      expect(await version('minor', 'john@doe.co', 'jdoe')).toBe(true);
+      expect(await version('minor', 'john@doe.co', 'jdoe')).toBe(true);
 
       expect(execSpy.mock.calls).toMatchSnapshot();
+    });
+
+    it('should skip version is branch is behind', async () => {
+      execSpy.mockRestore();
+      jest.spyOn(exec, 'exec').mockImplementation(
+        async (command, args, options): Promise<number> => {
+          if (command === 'git' && (args || []).includes('-uno')) {
+            const stdout = Buffer.from(
+              `Your branch is behind 'origin/master' by 6 commits, and can be fast-forwarded.`,
+              'utf-8',
+            );
+            options?.listeners?.stdout?.(stdout);
+          }
+          return 0;
+        },
+      );
+
+      expect(await version('minor', 'john@doe.co', 'jdoe')).toBe(false);
     });
   });
 
@@ -124,14 +152,6 @@ describe('git-helper', () => {
   });
 
   describe('#release', () => {
-    it('should fail to release without github token', async () => {
-      await expect(
-        release.bind(null, undefined),
-      ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"Cannot release without GITHUB_TOKEN"`,
-      );
-    });
-
     it('should release successfully', async () => {
       MockDate.set(new Date(0));
       const createReleaseSpy = jest.fn().mockResolvedValue({
@@ -143,14 +163,11 @@ describe('git-helper', () => {
         },
       } as unknown) as InstanceType<typeof GitHub>);
       jest.spyOn(packageHelper, 'getCurrentVersion').mockResolvedValue('1.0.0');
-      jest.spyOn(github.context, 'repo', 'get').mockReturnValue({
-        owner: 'jdoe',
-        repo: 'foo',
-      });
 
-      await release('github.token', [
-        createCommit(':arrow_up: bump something to 1.0.0'),
-      ]);
+      await release(
+        [createCommit(':arrow_up: bump something to 1.0.0')],
+        'github.token',
+      );
 
       expect(createReleaseSpy).toMatchInlineSnapshot(`
         [MockFunction] {
@@ -178,6 +195,142 @@ describe('git-helper', () => {
           ],
         }
       `);
+    });
+  });
+
+  describe('#areDiffWorthRelease', () => {
+    it('should not worth a release', async () => {
+      // @ts-ignore
+      const versionFiles = [
+        {
+          filename: 'package.json',
+          patch: `
+          @@ -1,6 +1,6 @@
+           "name": "@boilerz/super-server-auth-core",
+        -  "version": "1.6.12",
+        +  "version": "1.6.13",
+           "repository": "git@github.com:boilerz/super-server-auth-core.git",
+           `,
+        },
+      ] as File[];
+      const unworthyReleaseFiles = [
+        { filename: '.github/workflows/ci.yml' },
+        { filename: '.husky/pre-commit' },
+        { filename: '.eslintignore' },
+        { filename: '.eslintrc' },
+        { filename: '.gitignore' },
+        { filename: '.yarnrc' },
+        { filename: 'LICENCE' },
+        { filename: 'README' },
+        { filename: 'tsconfig' },
+      ] as File[];
+
+      expect(areDiffWorthRelease(versionFiles)).toBe(false);
+      expect(areDiffWorthRelease(unworthyReleaseFiles)).toBe(false);
+    });
+
+    it('should worth a release', async () => {
+      expect(areDiffWorthRelease(files)).toBe(true);
+    });
+  });
+
+  describe('#retrieveChangesSinceLastRelease', () => {
+    let listTagsSpy: jest.SpyInstance;
+    let listCommitsSpy: jest.SpyInstance;
+    let compareCommitsSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      listTagsSpy = jest.fn();
+      listCommitsSpy = jest.fn().mockResolvedValue({
+        data: [
+          createCommit('1', '1'),
+          createCommit('2', '2'),
+          createCommit('3', '3'),
+          createCommit('4', '4'),
+        ],
+      });
+      compareCommitsSpy = jest.fn();
+      jest.spyOn(github, 'getOctokit').mockReturnValue(({
+        repos: {
+          listTags: listTagsSpy,
+          listCommits: listCommitsSpy,
+          compareCommits: compareCommitsSpy,
+        },
+      } as unknown) as InstanceType<typeof GitHub>);
+    });
+
+    it('should retrieve changes since last release using oldest commit', async () => {
+      listTagsSpy.mockResolvedValue({ data: [] });
+      compareCommitsSpy.mockResolvedValue({ data: comparison });
+
+      await retrieveChangesSinceLastRelease('github.token');
+
+      expect(compareCommitsSpy.mock.calls).toMatchInlineSnapshot(`
+        Array [
+          Array [
+            Object {
+              "base": "4",
+              "head": "1",
+              "owner": "jdoe",
+              "repo": "foo",
+            },
+          ],
+        ]
+      `);
+    });
+
+    it('should retrieve changes since last release using latest tag', async () => {
+      listTagsSpy.mockResolvedValue({
+        data: [{ name: 'v1.0.2' }, { name: 'v1.0.1' }],
+      });
+      compareCommitsSpy.mockResolvedValue({ data: comparison });
+
+      await retrieveChangesSinceLastRelease('github.token');
+
+      expect(compareCommitsSpy.mock.calls).toMatchInlineSnapshot(`
+        Array [
+          Array [
+            Object {
+              "base": "v1.0.2",
+              "head": "1",
+              "owner": "jdoe",
+              "repo": "foo",
+            },
+          ],
+        ]
+      `);
+    });
+  });
+
+  describe('#hasPendingDependencyPRsOpen', () => {
+    let listSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      listSpy = jest.fn();
+      jest.spyOn(github, 'getOctokit').mockReturnValue(({
+        pulls: {
+          list: listSpy,
+        },
+      } as unknown) as InstanceType<typeof GitHub>);
+    });
+
+    it('should return true if dependencies PR are open', async () => {
+      listSpy.mockResolvedValue({
+        data: [
+          { labels: [{ name: 'dependencies' }] },
+          { labels: [{ name: 'automerge' }] },
+        ],
+      });
+
+      expect(await hasPendingDependencyPRsOpen('github.token')).toBe(true);
+    });
+
+    it('should return false if no dependencies PR are open', async () => {
+      listSpy.mockResolvedValue({
+        data: [{ labels: [{ name: 'automerge' }] }],
+      });
+
+      expect(await hasPendingDependencyPRsOpen('github.token')).toBe(false);
     });
   });
 });

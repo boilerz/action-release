@@ -18,7 +18,7 @@ export enum Registry {
 
 export async function getCurrentVersion(): Promise<string> {
   const packageJsonPath = path.resolve(process.cwd(), 'package.json');
-  core.debug(`package.json path: ${packageJsonPath}`);
+  core.debug(`📦 package.json path: ${packageJsonPath}`);
 
   const packageData: string = await readFileAsync(packageJsonPath, 'utf8');
   const { version } = JSON.parse(packageData);
@@ -81,9 +81,9 @@ export async function publish(
   registry: Registry,
   directory = '.',
 ): Promise<void> {
-  core.debug(`Setting config registry at ${registry}`);
+  core.debug(`📒 Setting config registry at ${registry}`);
   await exec.exec('npm', ['config', 'set', 'registry', registry]);
 
-  core.info(`Publishing to ${registry}`);
+  core.info(`📦 Publishing to ${registry}`);
   await exec.exec('npm', ['publish', directory, '--access', 'public']);
 }

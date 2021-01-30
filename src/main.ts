@@ -5,61 +5,108 @@ import * as exec from '@actions/exec';
 import * as github from '@actions/github';
 
 import * as gitHelper from './git-helper';
-import { Commit } from './git-helper';
+import { SimpleCommit } from './git-helper';
 import * as packageHelper from './package-helper';
 import { Registry } from './package-helper';
 
-export default async function run(): Promise<void> {
+interface RunOptions {
+  githubRef?: string;
+  githubToken?: string;
+  githubEmail: string;
+  githubUser: string;
+}
+
+export const defaultRunOptions: RunOptions = {
+  githubRef: process.env.GITHUB_REF,
+  githubToken: process.env.GITHUB_TOKEN,
+  githubEmail:
+    process.env.GITHUB_EMAIL || '77937117+boilerz-bot@users.noreply.github.com',
+  githubUser: process.env.GITHUB_USER || 'boilerz-bot',
+};
+
+export default async function run(
+  options: RunOptions = defaultRunOptions,
+): Promise<void> {
   try {
-    const commits = github.context.payload.commits as Commit[];
-    const [commit] = commits || [];
+    if (!options.githubToken) {
+      core.setFailed(`⛔️ Missing GITHUB_TOKEN`);
+      return;
+    }
+
+    const contextCommits = github.context.payload.commits as SimpleCommit[];
+    const [commit] = contextCommits || [];
     const botActor = process.env.GITHUB_USER || 'boilerz-bot';
     if (
       commit &&
-      commits.length === 1 &&
+      contextCommits.length === 1 &&
       commit.message.startsWith(':bookmark:') &&
       github.context.actor === botActor
     ) {
-      core.info(`Skipping, version commit pushed by ${botActor}`);
+      core.info(`🤖 Skipping, version commit pushed by ${botActor}`);
       return;
     }
 
     if (core.getInput('version') !== 'true') {
-      core.warning('Skipping version (flag false), release and publish');
+      core.warning('🚩 Skipping version (flag false), release and publish');
       return;
     }
 
     const baseBranch = core.getInput('baseBranch');
-    const currentBranch = gitHelper.getCurrentBranch();
+    const currentBranch = gitHelper.getCurrentBranch(options.githubRef);
     if (currentBranch !== baseBranch) {
       core.warning(
-        `Current branch: ${currentBranch}, releasing only from ${baseBranch}`,
+        `🚫 Current branch: ${currentBranch}, releasing only from ${baseBranch}`,
       );
       return;
     }
 
-    core.info('Detecting bump type given branch/commit');
-    const bumpType = gitHelper.detectBumpType();
+    if (await gitHelper.hasPendingDependencyPRsOpen(options.githubToken)) {
+      core.warning('🚧 Skipping, dependencies PRs found open');
+      return;
+    }
 
-    core.info(`Versioning a ${bumpType}`);
-    await gitHelper.version(bumpType);
+    core.info('✏️ Retrieving commits since last release');
+    const { commits, files } = await gitHelper.retrieveChangesSinceLastRelease(
+      options.githubToken,
+    );
+
+    core.info('✏️ Checking if changes worth a release');
+    if (!(await gitHelper.areDiffWorthRelease(files))) {
+      core.info('⏩ Skipping the release');
+      return;
+    }
+
+    core.info('⬆️ Detecting bump type given branch/commit');
+    const bumpType = gitHelper.detectBumpType(commits);
+
+    core.info(`🔖 Versioning a ${bumpType}`);
+    if (
+      !(await gitHelper.version(
+        bumpType,
+        options.githubEmail,
+        options.githubUser,
+      ))
+    ) {
+      core.info('⏩ Skipping this release, branch behind master');
+      return;
+    }
 
     if (core.getInput('release') === 'true') {
-      core.info('Releasing');
-      await gitHelper.release();
+      core.info('📝 Releasing');
+      await gitHelper.release(commits, options.githubToken);
     }
 
     if (core.getInput('publish') === 'true') {
       if (core.getInput('buildStep') === 'true') {
-        core.info('Extra build step');
+        core.info('🛠 Extra build step');
         await exec.exec('yarn', ['build']);
       }
 
-      core.info('Setting npm rc for publish');
+      core.info('📒 Setting npmrc for publish');
       await packageHelper.setupNpmRcForPublish();
 
       const publishDirectory = core.getInput('publishDirectory');
-      core.info(`Trying to publish from ${publishDirectory}`);
+      core.info(`📦 Trying to publish from ${publishDirectory}`);
       await packageHelper.publish(Registry.GITHUB, publishDirectory);
       await packageHelper.publish(Registry.NPM, publishDirectory);
     }
