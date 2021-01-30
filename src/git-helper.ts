@@ -7,8 +7,6 @@ import type { components } from '@octokit/openapi-types';
 
 import * as packageHelper from './package-helper';
 
-export type User = components['schemas']['simple-user'];
-
 export type Commit = components['schemas']['commit'];
 
 export type SimpleCommit = components['schemas']['simple-commit'];
