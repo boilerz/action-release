@@ -1,17 +1,26 @@
 import * as os from 'os';
-import process from 'process';
 
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import * as github from '@actions/github';
+import type { components } from '@octokit/openapi-types';
 
 import * as packageHelper from './package-helper';
 
-export interface User {
-  email: string;
-  name: string;
-  username: string;
-}
+export type User = components['schemas']['simple-user'];
+
+export type Commit = components['schemas']['commit'];
+
+export type SimpleCommit = components['schemas']['simple-commit'];
+
+export type File = components['schemas']['diff-entry'];
+
+export type BumpType = 'patch' | 'minor' | 'major';
+
+export type Comparison = Pick<
+  components['schemas']['commit-comparison'],
+  'commits' | 'files'
+>;
 
 enum CommitType {
   DEPENDENCY_UPDATE = ':arrow_up:',
@@ -25,25 +34,111 @@ enum PullRequestLabel {
   DEPENDENCIES = 'dependencies',
 }
 
-export interface Commit {
-  author: User;
-  committer: User;
-  distinct: boolean;
-  id: string;
-  message: string;
-  timestamp: string;
-  tree_id: string;
-  url: string;
+export interface EnhancedCommit extends Commit {
   type: CommitType;
 }
 
-export type BumpType = 'patch' | 'minor' | 'major';
+function completeCommitWithType(commit: Commit): EnhancedCommit {
+  let type: CommitType;
+  switch (true) {
+    case commit.commit.message.startsWith(CommitType.DEPENDENCY_UPDATE):
+      type = CommitType.DEPENDENCY_UPDATE;
+      break;
+    case commit.commit.message.startsWith(CommitType.FEATURE):
+      type = CommitType.FEATURE;
+      break;
+    case commit.commit.message.startsWith(CommitType.BUG):
+      type = CommitType.BUG;
+      break;
+    case /.*[Mm]erge.*/.test(commit.commit.message):
+      type = CommitType.MERGE;
+      break;
+    default:
+      type = CommitType.OTHER;
+      break;
+  }
+
+  return {
+    ...commit,
+    commit: {
+      ...commit.commit,
+      message: commit.commit.message.replace(`${type} `, ''),
+    },
+    type,
+  };
+}
+
+interface FileChecker {
+  regex: RegExp;
+  check?(file: File): boolean;
+}
+
+const UNWORTHY_RELEASE_FILE_CHECKERS: FileChecker[] = [
+  {
+    regex: /package\.json/,
+    check(file: File): boolean {
+      return file.patch ? file.patch.includes('version') : false;
+    },
+  },
+  {
+    regex: /^\.?(github|husky|eslintignore|eslintrc|gitignore|yarnrc|LICENCE|README|tsconfig).*/,
+  },
+  {
+    regex: /.*\.spec\.[j|t]sx?]$/,
+  },
+];
+
+export function areDiffWorthRelease(files: File[]): boolean {
+  const worthyReleaseFiles = files.filter(
+    (file) =>
+      !UNWORTHY_RELEASE_FILE_CHECKERS.some(
+        (fileChecker) =>
+          fileChecker.regex.test(file.filename) &&
+          (fileChecker.check ? fileChecker.check(file) : true),
+      ),
+  );
+  core.debug(
+    `📄 Updated files: ${files.map((file) => file.filename).join(',')}`,
+  );
+  core.debug(
+    `📄 Worthy release files: ${worthyReleaseFiles
+      .map((file) => file.filename)
+      .join(',')}`,
+  );
+  return worthyReleaseFiles.length > 0;
+}
+
+export async function retrieveChangesSinceLastRelease(
+  githubToken: string,
+): Promise<Comparison> {
+  const { repo, owner } = github.context.repo;
+  const octokit = github.getOctokit(githubToken);
+  const { data: tags } = await octokit.repos.listTags({
+    repo,
+    owner,
+    per_page: 1,
+  });
+
+  const { data: lastCommits } = await octokit.repos.listCommits({
+    repo,
+    owner,
+  });
+
+  const [{ sha: head }] = lastCommits;
+  let { sha: base } = lastCommits[lastCommits.length - 1]; // good enough approximation
+  if (tags?.length) [{ name: base }] = tags;
+
+  core.info(`🏷 Retrieving commits since ${base}`);
+  const {
+    data: { commits, diff_url, files },
+  } = await octokit.repos.compareCommits({ owner, repo, base, head });
+  core.info(`🔗 Diff url : ${diff_url}`);
+  return { commits, files };
+}
 
 export async function hasPendingDependencyPRsOpen(
-  githubToken = process.env.GITHUB_TOKEN,
+  githubToken: string,
 ): Promise<boolean> {
-  if (!githubToken) throw new Error('Missing GITHUB_TOKEN');
-
   const { repo, owner } = github.context.repo;
   const { data: openPRs } = await github
     .getOctokit(githubToken)
@@ -66,9 +161,7 @@ async function isBranchBehind(): Promise<boolean> {
   return isBehind;
 }
 
-export function getCurrentBranch(
-  githubRef: string | undefined = process.env.GITHUB_REF,
-): string {
+export function getCurrentBranch(githubRef: string | undefined): string {
   if (!githubRef) throw new Error('Failed to detect branch');
 
   const currentBranch = /refs\/[a-zA-Z]+\/(.*)/.exec(githubRef);
@@ -80,16 +173,13 @@ export function getCurrentBranch(
   return currentBranch[1];
 }
 
-export function detectBumpType(
-  commits: Commit[] = github.context.payload.commits,
-): BumpType {
-  if (!Array.isArray(commits) || commits.length === 0) {
-    throw new Error('Failed to access commits');
-  }
+export function detectBumpType(commits: Commit[]): BumpType {
+  if (!commits.length) throw new Error('Failed to access commits');
+
   const lastCommit = commits[commits.length - 1];
 
   let bumpType: BumpType = 'patch';
-  const [lastCommitMessage] = lastCommit.message.split(os.EOL);
+  const [lastCommitMessage] = lastCommit.commit.message.split(os.EOL);
   if (
     lastCommitMessage.includes('minor') ||
     lastCommitMessage.includes('feat')
@@ -101,20 +191,12 @@ export function detectBumpType(
 
 export async function version(
   bumpType: BumpType,
-  githubEmail: string | undefined = process.env.GITHUB_EMAIL,
-  githubUser: string | undefined = process.env.GITHUB_USER,
+  githubEmail: string,
+  githubUser: string,
 ): Promise<boolean> {
   core.info('📒 Setting git config');
-  await exec.exec('git', [
-    'config',
-    'user.name',
-    `"${githubUser || 'boilerz-bot'}"`,
-  ]);
-  await exec.exec('git', [
-    'config',
-    'user.email',
-    `"${githubEmail || '77937117+boilerz-bot@users.noreply.github.com'}"`,
-  ]);
+  await exec.exec('git', ['config', 'user.name', `"${githubUser}"`]);
+  await exec.exec('git', ['config', 'user.email', `"${githubEmail}"`]);
 
   core.info('🔖 Version patch');
   await exec.exec('yarn', ['version', `--${bumpType}`]);
@@ -126,43 +208,16 @@ export async function version(
   return true;
 }
 
-function formatCommitLine(commit: Commit): string {
-  const [message, ...details] = commit.message.split(os.EOL);
+function formatCommitLine(commit: EnhancedCommit): string {
+  const [message, ...details] = commit.commit.message.split(os.EOL);
   return [
-    `- ${message} ([${commit.id.substr(0, 8)}](${commit.url}))`,
+    `- ${message} ([${commit.sha.substr(0, 8)}](${commit.commit.url}))`,
     ...details.map((detail) => `  > ${detail}`),
   ].join(os.EOL);
 }
 
-function completeCommitWithType(commit: Commit): Commit {
-  let type: CommitType;
-  switch (true) {
-    case commit.message.startsWith(CommitType.DEPENDENCY_UPDATE):
-      type = CommitType.DEPENDENCY_UPDATE;
-      break;
-    case commit.message.startsWith(CommitType.FEATURE):
-      type = CommitType.FEATURE;
-      break;
-    case commit.message.startsWith(CommitType.BUG):
-      type = CommitType.BUG;
-      break;
-    case /[Mm]erge.*/.test(commit.message):
-      type = CommitType.MERGE;
-      break;
-    default:
-      type = CommitType.OTHER;
-      break;
-  }
-
-  return {
-    ...commit,
-    type,
-    message: commit.message.replace(`${type} `, ''),
-  };
-}
-
 function commitsBlock(
-  commits: Commit[],
+  commits: EnhancedCommit[],
   type: CommitType,
   title: string,
   isLastBlock = false,
@@ -213,13 +268,9 @@ export function createReleaseBody(commits: Commit[]): string {
 }
 
 export async function release(
-  githubToken = process.env.GITHUB_TOKEN,
-  commits: Commit[] = github.context.payload.commits,
+  commits: Commit[],
+  githubToken: string,
 ): Promise<void> {
-  if (!githubToken) {
-    throw new Error('Cannot release without GITHUB_TOKEN');
-  }
-
   const today = new Date().toLocaleDateString('en-US', {
     month: 'long',
     day: '2-digit',
@@ -231,7 +282,6 @@ export async function release(
   } = await github.getOctokit(githubToken).repos.createRelease({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
-    // eslint-disable-next-line @typescript-eslint/camelcase
     tag_name: `v${lastVersion}`,
     name: `${lastVersion} (${today})`,
     body: createReleaseBody(commits),

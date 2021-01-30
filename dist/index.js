@@ -7244,10 +7244,9 @@ function wrappy (fn, cb) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.release = exports.createReleaseBody = exports.version = exports.detectBumpType = exports.getCurrentBranch = exports.hasPendingDependencyPRsOpen = void 0;
+exports.release = exports.createReleaseBody = exports.version = exports.detectBumpType = exports.getCurrentBranch = exports.hasPendingDependencyPRsOpen = exports.retrieveChangesSinceLastRelease = exports.areDiffWorthRelease = void 0;
 const tslib_1 = __nccwpck_require__(4351);
 const os = tslib_1.__importStar(__nccwpck_require__(2087));
-const process_1 = tslib_1.__importDefault(__nccwpck_require__(1765));
 const core = tslib_1.__importStar(__nccwpck_require__(2186));
 const exec = tslib_1.__importStar(__nccwpck_require__(1514));
 const github = tslib_1.__importStar(__nccwpck_require__(5438));
@@ -7264,10 +7263,77 @@ var PullRequestLabel;
 (function (PullRequestLabel) {
     PullRequestLabel["DEPENDENCIES"] = "dependencies";
 })(PullRequestLabel || (PullRequestLabel = {}));
-function hasPendingDependencyPRsOpen(githubToken = process_1.default.env.GITHUB_TOKEN) {
+function completeCommitWithType(commit) {
+    let type;
+    switch (true) {
+        case commit.commit.message.startsWith(CommitType.DEPENDENCY_UPDATE):
+            type = CommitType.DEPENDENCY_UPDATE;
+            break;
+        case commit.commit.message.startsWith(CommitType.FEATURE):
+            type = CommitType.FEATURE;
+            break;
+        case commit.commit.message.startsWith(CommitType.BUG):
+            type = CommitType.BUG;
+            break;
+        case /.*[Mm]erge.*/.test(commit.commit.message):
+            type = CommitType.MERGE;
+            break;
+        default:
+            type = CommitType.OTHER;
+            break;
+    }
+    return Object.assign(Object.assign({}, commit), { commit: Object.assign(Object.assign({}, commit.commit), { message: commit.commit.message.replace(`${type} `, '') }), type });
+}
+const UNWORTHY_RELEASE_FILE_CHECKERS = [
+    {
+        regex: /package\.json/,
+        check(file) {
+            return file.patch ? file.patch.includes('version') : false;
+        },
+    },
+    {
+        regex: /^\.?(github|husky|eslintignore|eslintrc|gitignore|yarnrc|LICENCE|README|tsconfig).*/,
+    },
+    {
+        regex: /.*\.spec\.[j|t]sx?]$/,
+    },
+];
+function areDiffWorthRelease(files) {
+    const worthyReleaseFiles = files.filter((file) => !UNWORTHY_RELEASE_FILE_CHECKERS.some((fileChecker) => fileChecker.regex.test(file.filename) &&
+        (fileChecker.check ? fileChecker.check(file) : true)));
+    core.debug(`📄 Updated files: ${files.map((file) => file.filename).join(',')}`);
+    core.debug(`📄 Worthy release files: ${worthyReleaseFiles
+        .map((file) => file.filename)
+        .join(',')}`);
+    return worthyReleaseFiles.length > 0;
+}
+exports.areDiffWorthRelease = areDiffWorthRelease;
+function retrieveChangesSinceLastRelease(githubToken) {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        if (!githubToken)
-            throw new Error('Missing GITHUB_TOKEN');
+        const { repo, owner } = github.context.repo;
+        const octokit = github.getOctokit(githubToken);
+        const { data: tags } = yield octokit.repos.listTags({
+            repo,
+            owner,
+            per_page: 1,
+        });
+        const { data: lastCommits } = yield octokit.repos.listCommits({
+            repo,
+            owner,
+        });
+        const [{ sha: head }] = lastCommits;
+        let { sha: base } = lastCommits[lastCommits.length - 1]; // good enough approximation
+        if (tags === null || tags === void 0 ? void 0 : tags.length)
+            [{ name: base }] = tags;
+        core.info(`🏷 Retrieving commits since ${base}`);
+        const { data: { commits, diff_url, files }, } = yield octokit.repos.compareCommits({ owner, repo, base, head });
+        core.info(`🔗 Diff url : ${diff_url}`);
+        return { commits, files };
+    });
+}
+exports.retrieveChangesSinceLastRelease = retrieveChangesSinceLastRelease;
+function hasPendingDependencyPRsOpen(githubToken) {
+    return tslib_1.__awaiter(this, void 0, void 0, function* () {
         const { repo, owner } = github.context.repo;
         const { data: openPRs } = yield github
             .getOctokit(githubToken)
@@ -7289,7 +7355,7 @@ function isBranchBehind() {
         return isBehind;
     });
 }
-function getCurrentBranch(githubRef = process_1.default.env.GITHUB_REF) {
+function getCurrentBranch(githubRef) {
     if (!githubRef)
         throw new Error('Failed to detect branch');
     const currentBranch = /refs\/[a-zA-Z]+\/(.*)/.exec(githubRef);
@@ -7300,13 +7366,12 @@ function getCurrentBranch(githubRef = process_1.default.env.GITHUB_REF) {
     return currentBranch[1];
 }
 exports.getCurrentBranch = getCurrentBranch;
-function detectBumpType(commits = github.context.payload.commits) {
-    if (!Array.isArray(commits) || commits.length === 0) {
+function detectBumpType(commits) {
+    if (!commits.length)
         throw new Error('Failed to access commits');
-    }
     const lastCommit = commits[commits.length - 1];
     let bumpType = 'patch';
-    const [lastCommitMessage] = lastCommit.message.split(os.EOL);
+    const [lastCommitMessage] = lastCommit.commit.message.split(os.EOL);
     if (lastCommitMessage.includes('minor') ||
         lastCommitMessage.includes('feat')) {
         bumpType = 'minor';
@@ -7314,19 +7379,11 @@ function detectBumpType(commits = github.context.payload.commits) {
     return bumpType;
 }
 exports.detectBumpType = detectBumpType;
-function version(bumpType, githubEmail = process_1.default.env.GITHUB_EMAIL, githubUser = process_1.default.env.GITHUB_USER) {
+function version(bumpType, githubEmail, githubUser) {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         core.info('📒 Setting git config');
-        yield exec.exec('git', [
-            'config',
-            'user.name',
-            `"${githubUser || 'boilerz-bot'}"`,
-        ]);
-        yield exec.exec('git', [
-            'config',
-            'user.email',
-            `"${githubEmail || '77937117+boilerz-bot@users.noreply.github.com'}"`,
-        ]);
+        yield exec.exec('git', ['config', 'user.name', `"${githubUser}"`]);
+        yield exec.exec('git', ['config', 'user.email', `"${githubEmail}"`]);
         core.info('🔖 Version patch');
         yield exec.exec('yarn', ['version', `--${bumpType}`]);
         if (yield isBranchBehind())
@@ -7338,32 +7395,11 @@ function version(bumpType, githubEmail = process_1.default.env.GITHUB_EMAIL, git
 }
 exports.version = version;
 function formatCommitLine(commit) {
-    const [message, ...details] = commit.message.split(os.EOL);
+    const [message, ...details] = commit.commit.message.split(os.EOL);
     return [
-        `- ${message} ([${commit.id.substr(0, 8)}](${commit.url}))`,
+        `- ${message} ([${commit.sha.substr(0, 8)}](${commit.commit.url}))`,
         ...details.map((detail) => `  > ${detail}`),
     ].join(os.EOL);
-}
-function completeCommitWithType(commit) {
-    let type;
-    switch (true) {
-        case commit.message.startsWith(CommitType.DEPENDENCY_UPDATE):
-            type = CommitType.DEPENDENCY_UPDATE;
-            break;
-        case commit.message.startsWith(CommitType.FEATURE):
-            type = CommitType.FEATURE;
-            break;
-        case commit.message.startsWith(CommitType.BUG):
-            type = CommitType.BUG;
-            break;
-        case /[Mm]erge.*/.test(commit.message):
-            type = CommitType.MERGE;
-            break;
-        default:
-            type = CommitType.OTHER;
-            break;
-    }
-    return Object.assign(Object.assign({}, commit), { type, message: commit.message.replace(`${type} `, '') });
 }
 function commitsBlock(commits, type, title, isLastBlock = false) {
     const blockTitle = `### ${type} ${title}`;
@@ -7389,11 +7425,8 @@ function createReleaseBody(commits) {
     return dependenciesUpdateLines + featureLines + bugLines + otherUpdatesLines;
 }
 exports.createReleaseBody = createReleaseBody;
-function release(githubToken = process_1.default.env.GITHUB_TOKEN, commits = github.context.payload.commits) {
+function release(commits, githubToken) {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        if (!githubToken) {
-            throw new Error('Cannot release without GITHUB_TOKEN');
-        }
         const today = new Date().toLocaleDateString('en-US', {
             month: 'long',
             day: '2-digit',
@@ -7403,7 +7436,6 @@ function release(githubToken = process_1.default.env.GITHUB_TOKEN, commits = git
         const { data: { id: releaseId }, } = yield github.getOctokit(githubToken).repos.createRelease({
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
-            // eslint-disable-next-line @typescript-eslint/camelcase
             tag_name: `v${lastVersion}`,
             name: `${lastVersion} (${today})`,
             body: createReleaseBody(commits),
@@ -7425,6 +7457,7 @@ exports.release = release;
 /* module decorator */ module = __nccwpck_require__.nmd(module);
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.defaultRunOptions = void 0;
 const tslib_1 = __nccwpck_require__(4351);
 const process_1 = tslib_1.__importDefault(__nccwpck_require__(1765));
 const core = tslib_1.__importStar(__nccwpck_require__(2186));
@@ -7433,14 +7466,24 @@ const github = tslib_1.__importStar(__nccwpck_require__(5438));
 const gitHelper = tslib_1.__importStar(__nccwpck_require__(1107));
 const packageHelper = tslib_1.__importStar(__nccwpck_require__(3703));
 const package_helper_1 = __nccwpck_require__(3703);
-function run() {
+exports.defaultRunOptions = {
+    githubRef: process_1.default.env.GITHUB_REF,
+    githubToken: process_1.default.env.GITHUB_TOKEN,
+    githubEmail: process_1.default.env.GITHUB_EMAIL || '77937117+boilerz-bot@users.noreply.github.com',
+    githubUser: process_1.default.env.GITHUB_USER || 'boilerz-bot',
+};
+function run(options = exports.defaultRunOptions) {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         try {
-            const commits = github.context.payload.commits;
-            const [commit] = commits || [];
+            if (!options.githubToken) {
+                core.setFailed(`⛔️ Missing GITHUB_TOKEN`);
+                return;
+            }
+            const contextCommits = github.context.payload.commits;
+            const [commit] = contextCommits || [];
             const botActor = process_1.default.env.GITHUB_USER || 'boilerz-bot';
             if (commit &&
-                commits.length === 1 &&
+                contextCommits.length === 1 &&
                 commit.message.startsWith(':bookmark:') &&
                 github.context.actor === botActor) {
                 core.info(`🤖 Skipping, version commit pushed by ${botActor}`);
@@ -7451,25 +7494,32 @@ function run() {
                 return;
             }
             const baseBranch = core.getInput('baseBranch');
-            const currentBranch = gitHelper.getCurrentBranch();
+            const currentBranch = gitHelper.getCurrentBranch(options.githubRef);
             if (currentBranch !== baseBranch) {
                 core.warning(`🚫 Current branch: ${currentBranch}, releasing only from ${baseBranch}`);
                 return;
             }
-            if (yield gitHelper.hasPendingDependencyPRsOpen()) {
-                core.warning('🚧 Skipping, found dependencies PRs open');
+            if (yield gitHelper.hasPendingDependencyPRsOpen(options.githubToken)) {
+                core.warning('🚧 Skipping, dependencies PRs found open');
+                return;
+            }
+            core.info('✏️ Retrieving commits since last release');
+            const { commits, files } = yield gitHelper.retrieveChangesSinceLastRelease(options.githubToken);
+            core.info('✏️ Checking if changes worth a release');
+            if (!(yield gitHelper.areDiffWorthRelease(files))) {
+                core.info('⏩ Skipping the release');
                 return;
             }
             core.info('⬆️ Detecting bump type given branch/commit');
-            const bumpType = gitHelper.detectBumpType();
+            const bumpType = gitHelper.detectBumpType(commits);
             core.info(`🔖 Versioning a ${bumpType}`);
-            if (!(yield gitHelper.version(bumpType))) {
-                core.info('Skipping this release, branch behind master');
+            if (!(yield gitHelper.version(bumpType, options.githubEmail, options.githubUser))) {
+                core.info('⏩ Skipping this release, branch behind master');
                 return;
             }
             if (core.getInput('release') === 'true') {
                 core.info('📝 Releasing');
-                yield gitHelper.release();
+                yield gitHelper.release(commits, options.githubToken);
             }
             if (core.getInput('publish') === 'true') {
                 if (core.getInput('buildStep') === 'true') {
