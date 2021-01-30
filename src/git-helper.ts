@@ -38,6 +38,26 @@ export interface EnhancedCommit extends Commit {
   type: CommitType;
 }
 
+interface FileChecker {
+  regex: RegExp;
+  check?(file: File): boolean;
+}
+
+const UNWORTHY_RELEASE_FILE_CHECKERS: FileChecker[] = [
+  {
+    regex: /package\.json/,
+    check(file: File): boolean {
+      return file.patch ? file.patch.includes('version') : false;
+    },
+  },
+  {
+    regex: /^\.?(github|husky|eslintignore|eslintrc|gitignore|yarnrc|LICENCE|README|tsconfig).*/,
+  },
+  {
+    regex: /.*\.spec\.[j|t]sx?]$/,
+  },
+];
+
 function completeCommitWithType(commit: Commit): EnhancedCommit {
   let type: CommitType;
   switch (true) {
@@ -67,26 +87,6 @@ function completeCommitWithType(commit: Commit): EnhancedCommit {
     type,
   };
 }
-
-interface FileChecker {
-  regex: RegExp;
-  check?(file: File): boolean;
-}
-
-const UNWORTHY_RELEASE_FILE_CHECKERS: FileChecker[] = [
-  {
-    regex: /package\.json/,
-    check(file: File): boolean {
-      return file.patch ? file.patch.includes('version') : false;
-    },
-  },
-  {
-    regex: /^\.?(github|husky|eslintignore|eslintrc|gitignore|yarnrc|LICENCE|README|tsconfig).*/,
-  },
-  {
-    regex: /.*\.spec\.[j|t]sx?]$/,
-  },
-];
 
 export function areDiffWorthRelease(files: File[]): boolean {
   const worthyReleaseFiles = files.filter(

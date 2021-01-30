@@ -7263,6 +7263,20 @@ var PullRequestLabel;
 (function (PullRequestLabel) {
     PullRequestLabel["DEPENDENCIES"] = "dependencies";
 })(PullRequestLabel || (PullRequestLabel = {}));
+const UNWORTHY_RELEASE_FILE_CHECKERS = [
+    {
+        regex: /package\.json/,
+        check(file) {
+            return file.patch ? file.patch.includes('version') : false;
+        },
+    },
+    {
+        regex: /^\.?(github|husky|eslintignore|eslintrc|gitignore|yarnrc|LICENCE|README|tsconfig).*/,
+    },
+    {
+        regex: /.*\.spec\.[j|t]sx?]$/,
+    },
+];
 function completeCommitWithType(commit) {
     let type;
     switch (true) {
@@ -7284,20 +7298,6 @@ function completeCommitWithType(commit) {
     }
     return Object.assign(Object.assign({}, commit), { commit: Object.assign(Object.assign({}, commit.commit), { message: commit.commit.message.replace(`${type} `, '') }), type });
 }
-const UNWORTHY_RELEASE_FILE_CHECKERS = [
-    {
-        regex: /package\.json/,
-        check(file) {
-            return file.patch ? file.patch.includes('version') : false;
-        },
-    },
-    {
-        regex: /^\.?(github|husky|eslintignore|eslintrc|gitignore|yarnrc|LICENCE|README|tsconfig).*/,
-    },
-    {
-        regex: /.*\.spec\.[j|t]sx?]$/,
-    },
-];
 function areDiffWorthRelease(files) {
     const worthyReleaseFiles = files.filter((file) => !UNWORTHY_RELEASE_FILE_CHECKERS.some((fileChecker) => fileChecker.regex.test(file.filename) &&
         (fileChecker.check ? fileChecker.check(file) : true)));
