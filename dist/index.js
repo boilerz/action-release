@@ -7397,7 +7397,7 @@ exports.version = version;
 function formatCommitLine(commit) {
     const [message, ...details] = commit.commit.message.split(os.EOL);
     return [
-        `- ${message} ([${commit.sha.substr(0, 8)}](${commit.commit.url}))`,
+        `- ${message} ([${commit.sha.substr(0, 8)}](${commit.html_url}))`,
         ...details.map((detail) => `  > ${detail}`),
     ].join(os.EOL);
 }

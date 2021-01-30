@@ -21,8 +21,8 @@ import { comparison, files } from './__fixtures/comparison';
 function createCommit(message: string, sha?: string): EnhancedCommit {
   return {
     sha: sha || 'bac6aee2d316d65025022f9e84f12eb2ffcb34ac',
+    html_url: 'http://somewhere.web',
     commit: {
-      url: 'http://somewhere.web',
       message,
     },
   } as EnhancedCommit;
