@@ -174,6 +174,48 @@ describe('gh action', () => {
     );
   });
 
+  it('should skip to publish to npm or github', async () => {
+    jest.spyOn(packageHelper, 'setupNpmRcForPublish').mockResolvedValue();
+    mockReturnedValueOf({
+      getCurrentBranch: 'master',
+      hasPendingDependencyPRsOpen: false,
+      areDiffWorthRelease: true,
+      retrieveChangesSinceLastRelease: comparison,
+      version: true,
+    });
+
+    mockInputs({
+      version: 'true',
+      baseBranch: 'master',
+      publish: 'true',
+      publishToNpm: 'false',
+      publishToGithub: 'true',
+    });
+    await run(runOptions);
+
+    expect(publishSpy).toHaveBeenNthCalledWith(
+      1,
+      'https://npm.pkg.github.com',
+      '',
+    );
+
+    publishSpy.mockReset();
+    mockInputs({
+      version: 'true',
+      baseBranch: 'master',
+      publish: 'true',
+      publishToNpm: 'true',
+      publishToGithub: 'false',
+    });
+    await run(runOptions);
+
+    expect(publishSpy).toHaveBeenNthCalledWith(
+      1,
+      'https://registry.npmjs.org',
+      '',
+    );
+  });
+
   it('should version successfully', async () => {
     mockInputs({ version: 'true', baseBranch: 'master' });
     mockReturnedValueOf({
@@ -244,6 +286,8 @@ describe('gh action', () => {
       version: 'true',
       release: 'true',
       publish: 'true',
+      publishToGithub: 'true',
+      publishToNpm: 'true',
       baseBranch: 'master',
     });
     mockReturnedValueOf({
@@ -287,6 +331,8 @@ describe('gh action', () => {
       version: 'true',
       release: 'true',
       publish: 'true',
+      publishToGithub: 'true',
+      publishToNpm: 'true',
       buildStep: 'true',
       baseBranch: 'main',
     });

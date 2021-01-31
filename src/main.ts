@@ -96,19 +96,32 @@ export default async function run(
       await gitHelper.release(commits, options.githubToken);
     }
 
-    if (core.getInput('publish') === 'true') {
-      if (core.getInput('buildStep') === 'true') {
-        core.info('🛠 Extra build step');
-        await exec.exec('yarn', ['build']);
-      }
+    const publishToNpm = core.getInput('publishToNpm') === 'true';
+    const publishToGithub = core.getInput('publishToGithub') === 'true';
+    const publish = core.getInput('publish') === 'true';
 
-      core.info('📒 Setting npmrc for publish');
-      await packageHelper.setupNpmRcForPublish();
+    if (!publish || (!publishToNpm && !publishToGithub)) {
+      core.info('⏩ Skip publish');
+      return;
+    }
 
-      const publishDirectory = core.getInput('publishDirectory');
-      core.info(`📦 Trying to publish from ${publishDirectory}`);
-      await packageHelper.publish(Registry.GITHUB, publishDirectory);
+    if (core.getInput('buildStep') === 'true') {
+      core.info('🛠 Extra build step');
+      await exec.exec('yarn', ['build']);
+    }
+
+    core.info('📒 Setting npmrc for publish');
+    await packageHelper.setupNpmRcForPublish();
+
+    const publishDirectory = core.getInput('publishDirectory');
+    core.info(`📦 Trying to publish from ${publishDirectory}`);
+
+    if (publishToNpm) {
       await packageHelper.publish(Registry.NPM, publishDirectory);
+    }
+
+    if (publishToGithub) {
+      await packageHelper.publish(Registry.GITHUB, publishDirectory);
     }
   } catch (error) {
     core.setFailed(error.message);

@@ -26,6 +26,14 @@ inputs:
     required: false
     description: 'NPM/GITHUB package publish flag'
     default: 'true'
+  publishToNpm:
+    required: false
+    description: 'NPM publish flag'
+    default: 'true'
+  publishToGithub:
+    required: false
+    description: 'Github publish flag'
+    default: 'true'
 runs:
   using: 'node12'
   main: 'dist/index.js'

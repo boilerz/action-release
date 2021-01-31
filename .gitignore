@@ -12,3 +12,7 @@ coverage
 
 # Output
 lib
+
+# Yarn
+yarn-error.log
+
