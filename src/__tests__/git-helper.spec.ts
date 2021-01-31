@@ -256,6 +256,7 @@ describe('git-helper', () => {
         await areDiffWorthRelease({
           files: [],
           commits: [
+            createCommit('Merge commit'),
             createCommit(':arrow_up: Bump eslint from 7.18.0 to 7.19.0'),
           ],
         }),

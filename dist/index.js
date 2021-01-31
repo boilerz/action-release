@@ -7263,6 +7263,7 @@ var PullRequestLabel;
 (function (PullRequestLabel) {
     PullRequestLabel["DEPENDENCIES"] = "dependencies";
 })(PullRequestLabel || (PullRequestLabel = {}));
+const MERGE_MESSAGE_REGEX = /.*[Mm]erge.*/;
 const UNWORTHY_RELEASE_FILE_CHECKERS = [
     {
         regex: /package\.json/,
@@ -7289,7 +7290,7 @@ function completeCommitWithType(commit) {
         case commit.commit.message.startsWith(CommitType.BUG):
             type = CommitType.BUG;
             break;
-        case /.*[Mm]erge.*/.test(commit.commit.message):
+        case MERGE_MESSAGE_REGEX.test(commit.commit.message):
             type = CommitType.MERGE;
             break;
         default:
@@ -7311,13 +7312,14 @@ function extractDependency(commit) {
 }
 function areDiffWorthRelease({ files, commits, }) {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
+        const nonMergeCommits = commits.filter(({ commit: { message } }) => !MERGE_MESSAGE_REGEX.test(message));
         const devDependencies = yield packageHelper.getDevDependencies();
         core.info(`📦👨‍💻 Dev dependencies : ${devDependencies.join(',')}`);
-        const devDependenciesUpdate = commits
+        const devDependenciesUpdate = nonMergeCommits
             .filter(({ commit: { message } }) => message.startsWith(CommitType.DEPENDENCY_UPDATE))
             .map(extractDependency)
             .filter((dependency) => devDependencies.includes(dependency));
-        if (devDependenciesUpdate.length === commits.length) {
+        if (devDependenciesUpdate.length === nonMergeCommits.length) {
             core.info('👨‍💻 Commits contain only dev dependencies update');
             return false;
         }

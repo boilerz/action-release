@@ -41,6 +41,8 @@ interface FileChecker {
   check?(file: File): boolean;
 }
 
+const MERGE_MESSAGE_REGEX = /.*[Mm]erge.*/;
+
 const UNWORTHY_RELEASE_FILE_CHECKERS: FileChecker[] = [
   {
     regex: /package\.json/,
@@ -68,7 +70,7 @@ function completeCommitWithType(commit: Commit): EnhancedCommit {
     case commit.commit.message.startsWith(CommitType.BUG):
       type = CommitType.BUG;
       break;
-    case /.*[Mm]erge.*/.test(commit.commit.message):
+    case MERGE_MESSAGE_REGEX.test(commit.commit.message):
       type = CommitType.MERGE;
       break;
     default:
@@ -104,15 +106,18 @@ export async function areDiffWorthRelease({
   files,
   commits,
 }: Comparison): Promise<boolean> {
+  const nonMergeCommits = commits.filter(
+    ({ commit: { message } }) => !MERGE_MESSAGE_REGEX.test(message),
+  );
   const devDependencies = await packageHelper.getDevDependencies();
   core.info(`📦👨‍💻 Dev dependencies : ${devDependencies.join(',')}`);
-  const devDependenciesUpdate = commits
+  const devDependenciesUpdate = nonMergeCommits
     .filter(({ commit: { message } }) =>
       message.startsWith(CommitType.DEPENDENCY_UPDATE),
     )
     .map(extractDependency)
     .filter((dependency) => devDependencies.includes(dependency));
-  if (devDependenciesUpdate.length === commits.length) {
+  if (devDependenciesUpdate.length === nonMergeCommits.length) {
     core.info('👨‍💻 Commits contain only dev dependencies update');
     return false;
   }
