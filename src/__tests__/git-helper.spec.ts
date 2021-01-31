@@ -1,3 +1,4 @@
+import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import * as github from '@actions/github';
 import { GitHub } from '@actions/github/lib/utils';
@@ -200,6 +201,9 @@ describe('git-helper', () => {
 
   describe('#areDiffWorthRelease', () => {
     it('should not worth a release', async () => {
+      jest
+        .spyOn(packageHelper, 'getDevDependencies')
+        .mockResolvedValue(['eslint']);
       // @ts-ignore
       const versionFiles = [
         {
@@ -225,12 +229,52 @@ describe('git-helper', () => {
         { filename: 'tsconfig' },
       ] as File[];
 
-      expect(areDiffWorthRelease(versionFiles)).toBe(false);
-      expect(areDiffWorthRelease(unworthyReleaseFiles)).toBe(false);
+      expect(
+        await areDiffWorthRelease({
+          files: versionFiles,
+          commits: [createCommit('non dev dep')],
+        }),
+      ).toBe(false);
+      expect(
+        await areDiffWorthRelease({
+          files: unworthyReleaseFiles,
+          commits: [
+            createCommit('non dev dep'),
+            createCommit(':arrow_up: Bump eslint from 7.18.0 to 7.19.0'),
+          ],
+        }),
+      ).toBe(false);
+    });
+
+    it('should not worth a release when comparison detect only dev dependency update', async () => {
+      const infoSpy = jest.spyOn(core, 'info');
+      jest
+        .spyOn(packageHelper, 'getDevDependencies')
+        .mockResolvedValue(['eslint']);
+
+      expect(
+        await areDiffWorthRelease({
+          files: [],
+          commits: [
+            createCommit(':arrow_up: Bump eslint from 7.18.0 to 7.19.0'),
+          ],
+        }),
+      ).toBe(false);
+      expect(infoSpy).toHaveBeenLastCalledWith(
+        '👨‍💻 Commits contain only dev dependencies update',
+      );
     });
 
     it('should worth a release', async () => {
-      expect(areDiffWorthRelease(files)).toBe(true);
+      expect(
+        await areDiffWorthRelease({
+          files,
+          commits: [
+            createCommit(':arrow_up: Bump eslint from 7.18.0 to 7.19.0'),
+            createCommit('non dev dep'),
+          ],
+        }),
+      ).toBe(true);
     });
   });
 

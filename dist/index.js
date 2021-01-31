@@ -7298,14 +7298,34 @@ function completeCommitWithType(commit) {
     }
     return Object.assign(Object.assign({}, commit), { commit: Object.assign(Object.assign({}, commit.commit), { message: commit.commit.message.replace(`${type} `, '') }), type });
 }
-function areDiffWorthRelease(files) {
-    const worthyReleaseFiles = files.filter((file) => !UNWORTHY_RELEASE_FILE_CHECKERS.some((fileChecker) => fileChecker.regex.test(file.filename) &&
-        (fileChecker.check ? fileChecker.check(file) : true)));
-    core.debug(`📄 Updated files: ${files.map((file) => file.filename).join(',')}`);
-    core.debug(`📄 Worthy release files: ${worthyReleaseFiles
-        .map((file) => file.filename)
-        .join(',')}`);
-    return worthyReleaseFiles.length > 0;
+function extractDependency(commit) {
+    const { message } = commit.commit;
+    const regexResult = /^.*Bump (.*) from .*$/.exec(message);
+    if (!regexResult || regexResult.length < 2) {
+        core.warning(`⚠️ Malformed bump commit message : ${message}`);
+        return '';
+    }
+    return regexResult[1];
+}
+function areDiffWorthRelease({ files, commits, }) {
+    return tslib_1.__awaiter(this, void 0, void 0, function* () {
+        const devDependencies = yield packageHelper.getDevDependencies();
+        const devDependenciesUpdate = commits
+            .filter(({ commit: { message } }) => message.startsWith(CommitType.DEPENDENCY_UPDATE))
+            .map(extractDependency)
+            .filter((dependency) => devDependencies.includes(dependency));
+        if (devDependenciesUpdate.length === commits.length) {
+            core.info('👨‍💻 Commits contain only dev dependencies update');
+            return false;
+        }
+        const worthyReleaseFiles = files.filter((file) => !UNWORTHY_RELEASE_FILE_CHECKERS.some((fileChecker) => fileChecker.regex.test(file.filename) &&
+            (fileChecker.check ? fileChecker.check(file) : true)));
+        core.debug(`📄 Updated files: ${files.map((file) => file.filename).join(',')}`);
+        core.debug(`📄 Worthy release files: ${worthyReleaseFiles
+            .map((file) => file.filename)
+            .join(',')}`);
+        return worthyReleaseFiles.length > 0;
+    });
 }
 exports.areDiffWorthRelease = areDiffWorthRelease;
 function retrieveChangesSinceLastRelease(githubToken) {
@@ -7507,7 +7527,7 @@ function run(options = exports.defaultRunOptions) {
             core.info('✏️ Retrieving commits since last release');
             const { commits, files } = yield gitHelper.retrieveChangesSinceLastRelease(options.githubToken);
             core.info('✏️ Checking if changes worth a release');
-            if (!(yield gitHelper.areDiffWorthRelease(files))) {
+            if (!(yield gitHelper.areDiffWorthRelease({ commits, files }))) {
                 core.info('⏩ Skipping the release');
                 return;
             }
@@ -7564,7 +7584,7 @@ if (!module.parent) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.publish = exports.setupNpmRcForPublish = exports.updateNpmRcForPublish = exports.writeNpmRc = exports.readNpmRc = exports.getCurrentVersion = exports.Registry = void 0;
+exports.publish = exports.setupNpmRcForPublish = exports.updateNpmRcForPublish = exports.writeNpmRc = exports.readNpmRc = exports.getDevDependencies = exports.getCurrentVersion = exports.Registry = void 0;
 const tslib_1 = __nccwpck_require__(4351);
 const fs_1 = tslib_1.__importDefault(__nccwpck_require__(5747));
 const os_1 = tslib_1.__importDefault(__nccwpck_require__(2087));
@@ -7581,16 +7601,28 @@ var Registry;
     Registry["NPM"] = "https://registry.npmjs.org";
     Registry["GITHUB"] = "https://npm.pkg.github.com";
 })(Registry = exports.Registry || (exports.Registry = {}));
-function getCurrentVersion() {
+function getPackageJson() {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         const packageJsonPath = path_1.default.resolve(process_1.default.cwd(), 'package.json');
         core.debug(`📦 package.json path: ${packageJsonPath}`);
         const packageData = yield readFileAsync(packageJsonPath, 'utf8');
-        const { version } = JSON.parse(packageData);
+        return JSON.parse(packageData);
+    });
+}
+function getCurrentVersion() {
+    return tslib_1.__awaiter(this, void 0, void 0, function* () {
+        const { version } = yield getPackageJson();
         return version;
     });
 }
 exports.getCurrentVersion = getCurrentVersion;
+function getDevDependencies() {
+    return tslib_1.__awaiter(this, void 0, void 0, function* () {
+        const { devDependencies } = yield getPackageJson();
+        return Object.keys(devDependencies || []);
+    });
+}
+exports.getDevDependencies = getDevDependencies;
 function readNpmRc(filePath) {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         if (!(yield existsAsync(filePath)))

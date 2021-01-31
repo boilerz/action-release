@@ -16,14 +16,28 @@ export enum Registry {
   GITHUB = 'https://npm.pkg.github.com',
 }
 
-export async function getCurrentVersion(): Promise<string> {
+interface PackageJson {
+  version: string;
+  devDependencies: Record<string, string>;
+}
+
+async function getPackageJson(): Promise<PackageJson> {
   const packageJsonPath = path.resolve(process.cwd(), 'package.json');
   core.debug(`📦 package.json path: ${packageJsonPath}`);
 
   const packageData: string = await readFileAsync(packageJsonPath, 'utf8');
-  const { version } = JSON.parse(packageData);
+  return JSON.parse(packageData);
+}
 
+export async function getCurrentVersion(): Promise<string> {
+  const { version } = await getPackageJson();
   return version;
+}
+
+export async function getDevDependencies(): Promise<string[]> {
+  const { devDependencies } = await getPackageJson();
+
+  return Object.keys(devDependencies || []);
 }
 
 export async function readNpmRc(

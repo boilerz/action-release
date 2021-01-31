@@ -86,7 +86,32 @@ function completeCommitWithType(commit: Commit): EnhancedCommit {
   };
 }
 
-export function areDiffWorthRelease(files: File[]): boolean {
+function extractDependency(commit: Commit): string {
+  const { message } = commit.commit;
+  const regexResult = /^.*Bump (.*) from .*$/.exec(message);
+  if (!regexResult || regexResult.length < 2) {
+    core.warning(`⚠️ Malformed bump commit message : ${message}`);
+    return '';
+  }
+  return regexResult[1];
+}
+
+export async function areDiffWorthRelease({
+  files,
+  commits,
+}: Comparison): Promise<boolean> {
+  const devDependencies = await packageHelper.getDevDependencies();
+  const devDependenciesUpdate = commits
+    .filter(({ commit: { message } }) =>
+      message.startsWith(CommitType.DEPENDENCY_UPDATE),
+    )
+    .map(extractDependency)
+    .filter((dependency) => devDependencies.includes(dependency));
+  if (devDependenciesUpdate.length === commits.length) {
+    core.info('👨‍💻 Commits contain only dev dependencies update');
+    return false;
+  }
+
   const worthyReleaseFiles = files.filter(
     (file) =>
       !UNWORTHY_RELEASE_FILE_CHECKERS.some(

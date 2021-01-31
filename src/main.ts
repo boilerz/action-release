@@ -71,7 +71,7 @@ export default async function run(
     );
 
     core.info('✏️ Checking if changes worth a release');
-    if (!(await gitHelper.areDiffWorthRelease(files))) {
+    if (!(await gitHelper.areDiffWorthRelease({ commits, files }))) {
       core.info('⏩ Skipping the release');
       return;
     }
