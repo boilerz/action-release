@@ -88,7 +88,7 @@ function completeCommitWithType(commit: Commit): EnhancedCommit {
 
 function extractDependency(commit: Commit): string {
   const { message } = commit.commit;
-  const regexResult = /^.*Bump (.*) from .*$/.exec(message);
+  const regexResult = /^.*Bump (.*) from .*/.exec(message);
   if (!regexResult || regexResult.length < 2) {
     core.warning(`⚠️ Malformed bump commit message : ${message}`);
     return '';
