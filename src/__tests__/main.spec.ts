@@ -45,7 +45,7 @@ function mockReturnedValueOf(value: {
   if (typeof value.areDiffWorthRelease === 'boolean') {
     jest
       .spyOn(gitHelper, 'areDiffWorthRelease')
-      .mockReturnValue(value.areDiffWorthRelease);
+      .mockResolvedValue(value.areDiffWorthRelease);
   }
   if (typeof value.version === 'boolean') {
     jest.spyOn(gitHelper, 'version').mockResolvedValue(value.version);
