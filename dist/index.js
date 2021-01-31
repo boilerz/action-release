@@ -7305,11 +7305,14 @@ function extractDependency(commit) {
         core.warning(`⚠️ Malformed bump commit message : ${message}`);
         return '';
     }
-    return regexResult[1];
+    const dependency = regexResult[1];
+    core.info(`📦 Retrieved ${dependency} from message: ${message.split('\n')[0]}`);
+    return dependency;
 }
 function areDiffWorthRelease({ files, commits, }) {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         const devDependencies = yield packageHelper.getDevDependencies();
+        core.info(`📦👨‍💻 Dev dependencies : ${devDependencies.join(',')}`);
         const devDependenciesUpdate = commits
             .filter(({ commit: { message } }) => message.startsWith(CommitType.DEPENDENCY_UPDATE))
             .map(extractDependency)

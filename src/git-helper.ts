@@ -93,7 +93,11 @@ function extractDependency(commit: Commit): string {
     core.warning(`⚠️ Malformed bump commit message : ${message}`);
     return '';
   }
-  return regexResult[1];
+  const dependency = regexResult[1];
+  core.info(
+    `📦 Retrieved ${dependency} from message: ${message.split('\n')[0]}`,
+  );
+  return dependency;
 }
 
 export async function areDiffWorthRelease({
@@ -101,6 +105,7 @@ export async function areDiffWorthRelease({
   commits,
 }: Comparison): Promise<boolean> {
   const devDependencies = await packageHelper.getDevDependencies();
+  core.info(`📦👨‍💻 Dev dependencies : ${devDependencies.join(',')}`);
   const devDependenciesUpdate = commits
     .filter(({ commit: { message } }) =>
       message.startsWith(CommitType.DEPENDENCY_UPDATE),
