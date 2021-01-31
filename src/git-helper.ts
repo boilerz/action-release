@@ -109,6 +109,10 @@ export async function areDiffWorthRelease({
   const nonMergeCommits = commits.filter(
     ({ commit: { message } }) => !MERGE_MESSAGE_REGEX.test(message),
   );
+  core.info(`↩️ Non merge commits found ${nonMergeCommits.length}`);
+  commits.forEach(({ commit: { message } }) =>
+    core.info(`📦 ${message.split('\n')}`),
+  );
   const devDependencies = await packageHelper.getDevDependencies();
   core.info(`📦👨‍💻 Dev dependencies : ${devDependencies.join(',')}`);
   const devDependenciesUpdate = nonMergeCommits
@@ -117,6 +121,9 @@ export async function areDiffWorthRelease({
     )
     .map(extractDependency)
     .filter((dependency) => devDependencies.includes(dependency));
+  devDependenciesUpdate.forEach((dependency) =>
+    core.info(`📦👨‍💻 ${dependency}`),
+  );
   if (devDependenciesUpdate.length === nonMergeCommits.length) {
     core.info('👨‍💻 Commits contain only dev dependencies update');
     return false;
