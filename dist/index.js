@@ -7389,7 +7389,8 @@ function version(bumpType, githubEmail, githubUser) {
         if (yield isBranchBehind())
             return false;
         core.info('📌 Pushing release commit message and tag');
-        yield exec.exec('git', ['push', '--follow-tags']);
+        yield exec.exec('git', ['push']);
+        yield exec.exec('git', ['push', '--tags']);
         return true;
     });
 }

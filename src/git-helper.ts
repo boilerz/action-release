@@ -202,7 +202,8 @@ export async function version(
   if (await isBranchBehind()) return false;
 
   core.info('📌 Pushing release commit message and tag');
-  await exec.exec('git', ['push', '--follow-tags']);
+  await exec.exec('git', ['push']);
+  await exec.exec('git', ['push', '--tags']);
   return true;
 }
 

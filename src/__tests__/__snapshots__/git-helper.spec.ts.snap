@@ -41,7 +41,13 @@ Array [
     "git",
     Array [
       "push",
-      "--follow-tags",
+    ],
+  ],
+  Array [
+    "git",
+    Array [
+      "push",
+      "--tags",
     ],
   ],
   Array [
@@ -83,7 +89,13 @@ Array [
     "git",
     Array [
       "push",
-      "--follow-tags",
+    ],
+  ],
+  Array [
+    "git",
+    Array [
+      "push",
+      "--tags",
     ],
   ],
 ]
