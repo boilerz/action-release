@@ -37,7 +37,7 @@ export async function getCurrentVersion(): Promise<string> {
 export async function getDevDependencies(): Promise<string[]> {
   const { devDependencies } = await getPackageJson();
 
-  return Object.keys(devDependencies || []);
+  return Object.keys(devDependencies || {});
 }
 
 export async function readNpmRc(

@@ -7619,7 +7619,7 @@ exports.getCurrentVersion = getCurrentVersion;
 function getDevDependencies() {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         const { devDependencies } = yield getPackageJson();
-        return Object.keys(devDependencies || []);
+        return Object.keys(devDependencies || {});
     });
 }
 exports.getDevDependencies = getDevDependencies;
