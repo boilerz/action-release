@@ -325,10 +325,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@boilerz/build-tools@^1.4.6":
-  version "1.4.6"
-  resolved "https://registry.yarnpkg.com/@boilerz/build-tools/-/build-tools-1.4.6.tgz#1d30c2484a45008be7daf4a713df0b894fea5bed"
-  integrity sha512-Z2LfXaGC995QUTAbrGPDYf+KKZORxbU78rh3ALWf/aRiuf6akY67nga9lMCTfzdiY2OhwCVoH+ZCG3NIkFJOhg==
+"@boilerz/build-tools@^1.4.8":
+  version "1.4.8"
+  resolved "https://registry.yarnpkg.com/@boilerz/build-tools/-/build-tools-1.4.8.tgz#494bc83ea1254e8575f52c667616b9d5a391b086"
+  integrity sha512-wjEc53n0EycRkqLP+J+GeF/3eTyPq+gzkyhNoGUQ9L3Vvlq9xR0mhe9F/shWFBU2ImEisBfX83av4TVdXp+QYQ==
 
 "@boilerz/eslint-config@^2.0.3":
   version "2.0.3"
