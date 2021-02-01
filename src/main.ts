@@ -70,6 +70,11 @@ export default async function run(
       options.githubToken,
     );
 
+    if (commits.length === 0) {
+      core.info('⏩ No commit found since last release');
+      return;
+    }
+
     core.info('✏️ Checking if changes worth a release');
     if (!(await gitHelper.areDiffWorthRelease({ commits, files }))) {
       core.info('⏩ Skipping the release');

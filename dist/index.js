@@ -7534,6 +7534,10 @@ function run(options = exports.defaultRunOptions) {
             }
             core.info('✏️ Retrieving commits since last release');
             const { commits, files } = yield gitHelper.retrieveChangesSinceLastRelease(options.githubToken);
+            if (commits.length === 0) {
+                core.info('⏩ No commit found since last release');
+                return;
+            }
             core.info('✏️ Checking if changes worth a release');
             if (!(yield gitHelper.areDiffWorthRelease({ commits, files }))) {
                 core.info('⏩ Skipping the release');
