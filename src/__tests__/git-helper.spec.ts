@@ -72,6 +72,9 @@ describe('git-helper', () => {
       expect(
         detectBumpType([createCommit(':sparkles: minor something else')]),
       ).toEqual('minor');
+      expect(
+        detectBumpType([createCommit(':sparkles: something else')]),
+      ).toEqual('minor');
     });
 
     it('should return a patch bump type for any other commit type', () => {

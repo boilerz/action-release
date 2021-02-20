@@ -222,7 +222,8 @@ export function detectBumpType(commits: Commit[]): BumpType {
   const [lastCommitMessage] = lastCommit.commit.message.split(os.EOL);
   if (
     lastCommitMessage.includes('minor') ||
-    lastCommitMessage.includes('feat')
+    lastCommitMessage.includes('feat') ||
+    lastCommitMessage.startsWith(CommitType.FEATURE)
   ) {
     bumpType = 'minor';
   }
