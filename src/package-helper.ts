@@ -7,9 +7,9 @@ import util from 'util';
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 
-const readFileAsync: Function = util.promisify(fs.readFile);
-const writeFileAsync: Function = util.promisify(fs.writeFile);
-const existsAsync: Function = util.promisify(fs.exists);
+const readFileAsync = util.promisify(fs.readFile);
+const writeFileAsync = util.promisify(fs.writeFile);
+const existsAsync = util.promisify(fs.exists);
 
 export enum Registry {
   NPM = 'https://registry.npmjs.org',

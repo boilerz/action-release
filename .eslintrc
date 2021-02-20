@@ -2,6 +2,6 @@
   "extends": "@boilerz/eslint-config",
   "rules": {
     "no-template-curly-in-string": "off",
-    "@typescript-eslint/camelcase": "off"
+    "camelcase": "off"
   }
 }
