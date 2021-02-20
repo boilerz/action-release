@@ -204,7 +204,6 @@ describe('git-helper', () => {
       jest
         .spyOn(packageHelper, 'getDevDependencies')
         .mockResolvedValue(['eslint']);
-      // @ts-ignore
       const versionFiles = [
         {
           filename: 'package.json',
