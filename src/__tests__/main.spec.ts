@@ -21,6 +21,7 @@ function mockReturnedValueOf(value: {
   retrieveChangesSinceLastRelease?: Comparison;
   areDiffWorthRelease?: boolean;
   version?: boolean;
+  listPackagePaths?: string[];
 }) {
   if (value.getCurrentBranch) {
     jest
@@ -31,6 +32,11 @@ function mockReturnedValueOf(value: {
     jest
       .spyOn(gitHelper, 'detectBumpType')
       .mockReturnValue(value.detectBumpType);
+  }
+  if (value.listPackagePaths) {
+    jest
+      .spyOn(packageHelper, 'listPackagePaths')
+      .mockResolvedValue(value.listPackagePaths);
   }
   if (value.retrieveChangesSinceLastRelease) {
     jest
@@ -182,6 +188,7 @@ describe('gh action', () => {
       areDiffWorthRelease: true,
       retrieveChangesSinceLastRelease: comparison,
       version: true,
+      listPackagePaths: ['dist'],
     });
 
     mockInputs({
@@ -196,7 +203,7 @@ describe('gh action', () => {
     expect(publishSpy).toHaveBeenNthCalledWith(
       1,
       'https://npm.pkg.github.com',
-      '',
+      'dist',
     );
 
     publishSpy.mockReset();
@@ -212,7 +219,7 @@ describe('gh action', () => {
     expect(publishSpy).toHaveBeenNthCalledWith(
       1,
       'https://registry.npmjs.org',
-      '',
+      'dist',
     );
   });
 
@@ -296,6 +303,7 @@ describe('gh action', () => {
       hasPendingDependencyPRsOpen: false,
       retrieveChangesSinceLastRelease: comparison,
       areDiffWorthRelease: true,
+      listPackagePaths: ['dist'],
     });
 
     const setupNpmRcForPublishSpy = jest
@@ -342,6 +350,7 @@ describe('gh action', () => {
       hasPendingDependencyPRsOpen: false,
       retrieveChangesSinceLastRelease: comparison,
       areDiffWorthRelease: true,
+      listPackagePaths: ['dist'],
     });
     const setupNpmRcForPublishSpy = jest
       .spyOn(packageHelper, 'setupNpmRcForPublish')

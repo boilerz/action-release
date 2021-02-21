@@ -5,6 +5,7 @@ import * as exec from '@actions/exec';
 
 import {
   getCurrentVersion,
+  listPackagePaths,
   publish,
   readNpmRc,
   Registry,
@@ -149,6 +150,20 @@ describe('package-helper', () => {
           ],
         ]
       `);
+    });
+  });
+
+  describe('#listPackagePaths', () => {
+    it('should list package folders successfully', async () => {
+      await expect(
+        listPackagePaths(path.resolve(__dirname, '__fixtures/dist')),
+      ).resolves.toEqual([expect.stringMatching('.*__fixtures/dist$')]);
+      await expect(
+        listPackagePaths(path.resolve(__dirname, '__fixtures/packages')),
+      ).resolves.toEqual([
+        expect.stringMatching('.*__fixtures/packages/package1'),
+        expect.stringMatching('.*__fixtures/packages/package2'),
+      ]);
     });
   });
 });

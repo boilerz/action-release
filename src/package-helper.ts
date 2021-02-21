@@ -7,8 +7,9 @@ import util from 'util';
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 
-const readFileAsync = util.promisify(fs.readFile);
-const writeFileAsync = util.promisify(fs.writeFile);
+const readdirAsync = fs.promises.readdir;
+const readFileAsync = fs.promises.readFile;
+const writeFileAsync = fs.promises.writeFile;
 const existsAsync = util.promisify(fs.exists);
 
 export enum Registry {
@@ -100,4 +101,17 @@ export async function publish(
 
   core.info(`📦 Publishing to ${registry}`);
   await exec.exec('npm', ['publish', directory, '--access', 'public']);
+}
+
+export async function listPackagePaths(folderPath: string): Promise<string[]> {
+  const dirents = await readdirAsync(folderPath, { withFileTypes: true });
+  if (dirents.some(({ name }) => name === 'package.json')) {
+    return [folderPath];
+  }
+  const packagesPaths = await Promise.all(
+    dirents
+      .filter((dirent) => dirent.isDirectory())
+      .map(({ name }) => listPackagePaths(path.resolve(folderPath, name))),
+  );
+  return Array.prototype.concat(...packagesPaths);
 }

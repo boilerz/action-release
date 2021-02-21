@@ -7569,13 +7569,16 @@ function run(options = exports.defaultRunOptions) {
             core.info('📒 Setting npmrc for publish');
             yield packageHelper.setupNpmRcForPublish();
             const publishDirectory = core.getInput('publishDirectory');
-            core.info(`📦 Trying to publish from ${publishDirectory}`);
-            if (publishToNpm) {
-                yield packageHelper.publish(package_helper_1.Registry.NPM, publishDirectory);
-            }
-            if (publishToGithub) {
-                yield packageHelper.publish(package_helper_1.Registry.GITHUB, publishDirectory);
-            }
+            const packagesPaths = yield packageHelper.listPackagePaths(publishDirectory);
+            yield Promise.all(packagesPaths.map((packagePath) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                core.info(`📦 Trying to publish from ${packagePath}`);
+                if (publishToNpm) {
+                    yield packageHelper.publish(package_helper_1.Registry.NPM, packagePath);
+                }
+                if (publishToGithub) {
+                    yield packageHelper.publish(package_helper_1.Registry.GITHUB, packagePath);
+                }
+            })));
         }
         catch (error) {
             core.setFailed(error.message);
@@ -7597,7 +7600,7 @@ if (!module.parent) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.publish = exports.setupNpmRcForPublish = exports.updateNpmRcForPublish = exports.writeNpmRc = exports.readNpmRc = exports.getDevDependencies = exports.getCurrentVersion = exports.Registry = void 0;
+exports.listPackagePaths = exports.publish = exports.setupNpmRcForPublish = exports.updateNpmRcForPublish = exports.writeNpmRc = exports.readNpmRc = exports.getDevDependencies = exports.getCurrentVersion = exports.Registry = void 0;
 const tslib_1 = __nccwpck_require__(4351);
 const fs_1 = tslib_1.__importDefault(__nccwpck_require__(5747));
 const os_1 = tslib_1.__importDefault(__nccwpck_require__(2087));
@@ -7606,8 +7609,9 @@ const process_1 = tslib_1.__importDefault(__nccwpck_require__(1765));
 const util_1 = tslib_1.__importDefault(__nccwpck_require__(1669));
 const core = tslib_1.__importStar(__nccwpck_require__(2186));
 const exec = tslib_1.__importStar(__nccwpck_require__(1514));
-const readFileAsync = util_1.default.promisify(fs_1.default.readFile);
-const writeFileAsync = util_1.default.promisify(fs_1.default.writeFile);
+const readdirAsync = fs_1.default.promises.readdir;
+const readFileAsync = fs_1.default.promises.readFile;
+const writeFileAsync = fs_1.default.promises.writeFile;
 const existsAsync = util_1.default.promisify(fs_1.default.exists);
 var Registry;
 (function (Registry) {
@@ -7691,6 +7695,19 @@ function publish(registry, directory = '.') {
     });
 }
 exports.publish = publish;
+function listPackagePaths(folderPath) {
+    return tslib_1.__awaiter(this, void 0, void 0, function* () {
+        const dirents = yield readdirAsync(folderPath, { withFileTypes: true });
+        if (dirents.some(({ name }) => name === 'package.json')) {
+            return [folderPath];
+        }
+        const packagesPaths = yield Promise.all(dirents
+            .filter((dirent) => dirent.isDirectory())
+            .map(({ name }) => listPackagePaths(path_1.default.resolve(folderPath, name))));
+        return Array.prototype.concat(...packagesPaths);
+    });
+}
+exports.listPackagePaths = listPackagePaths;
 
 
 /***/ }),

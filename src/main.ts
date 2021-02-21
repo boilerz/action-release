@@ -119,15 +119,23 @@ export default async function run(
     await packageHelper.setupNpmRcForPublish();
 
     const publishDirectory = core.getInput('publishDirectory');
-    core.info(`📦 Trying to publish from ${publishDirectory}`);
+    const packagesPaths = await packageHelper.listPackagePaths(
+      publishDirectory,
+    );
 
-    if (publishToNpm) {
-      await packageHelper.publish(Registry.NPM, publishDirectory);
-    }
+    await Promise.all(
+      packagesPaths.map(async (packagePath) => {
+        core.info(`📦 Trying to publish from ${packagePath}`);
 
-    if (publishToGithub) {
-      await packageHelper.publish(Registry.GITHUB, publishDirectory);
-    }
+        if (publishToNpm) {
+          await packageHelper.publish(Registry.NPM, packagePath);
+        }
+
+        if (publishToGithub) {
+          await packageHelper.publish(Registry.GITHUB, packagePath);
+        }
+      }),
+    );
   } catch (error) {
     core.setFailed(error.message);
   }
