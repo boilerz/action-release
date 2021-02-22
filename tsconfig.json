@@ -2,7 +2,8 @@
   "extends": "@boilerz/tsconfig",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "lib"
+    "outDir": "lib",
+    "target": "ES2015"
   },
   "exclude": ["**/*.spec.ts", "lib"]
 }
