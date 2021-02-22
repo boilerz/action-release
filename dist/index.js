@@ -7297,7 +7297,14 @@ function completeCommitWithType(commit) {
             type = CommitType.OTHER;
             break;
     }
-    return Object.assign(Object.assign({}, commit), { commit: Object.assign(Object.assign({}, commit.commit), { message: commit.commit.message.replace(`${type} `, '') }), type });
+    return {
+        ...commit,
+        commit: {
+            ...commit.commit,
+            message: commit.commit.message.replace(`${type} `, ''),
+        },
+        type,
+    };
 }
 function extractDependency(commit) {
     const { message } = commit.commit;
@@ -7310,84 +7317,76 @@ function extractDependency(commit) {
     core.info(`📦 Retrieved ${dependency} from message: ${message.split('\n')[0]}`);
     return dependency;
 }
-function areDiffWorthRelease({ files, commits, }) {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        const nonMergeCommits = commits.filter(({ commit: { message } }) => !MERGE_MESSAGE_REGEX.test(message));
-        core.info(`↩️ Non merge commits found ${nonMergeCommits.length}`);
-        commits.forEach(({ commit: { message } }) => core.info(`📦 ${message.split('\n')}`));
-        const devDependencies = yield packageHelper.getDevDependencies();
-        core.info(`📦👨‍💻 Dev dependencies : ${devDependencies.join(',')}`);
-        const devDependenciesUpdate = nonMergeCommits
-            .filter(({ commit: { message } }) => message.startsWith(CommitType.DEPENDENCY_UPDATE))
-            .map(extractDependency)
-            .filter((dependency) => devDependencies.includes(dependency));
-        devDependenciesUpdate.forEach((dependency) => core.info(`📦👨‍💻 ${dependency}`));
-        if (devDependenciesUpdate.length === nonMergeCommits.length) {
-            core.info('👨‍💻 Commits contain only dev dependencies update');
-            return false;
-        }
-        const worthyReleaseFiles = files.filter((file) => !UNWORTHY_RELEASE_FILE_CHECKERS.some((fileChecker) => fileChecker.regex.test(file.filename) &&
-            (fileChecker.check ? fileChecker.check(file) : true)));
-        core.debug(`📄 Updated files: ${files.map((file) => file.filename).join(',')}`);
-        core.debug(`📄 Worthy release files: ${worthyReleaseFiles
-            .map((file) => file.filename)
-            .join(',')}`);
-        return worthyReleaseFiles.length > 0;
-    });
+async function areDiffWorthRelease({ files, commits, }) {
+    const nonMergeCommits = commits.filter(({ commit: { message } }) => !MERGE_MESSAGE_REGEX.test(message));
+    core.info(`↩️ Non merge commits found ${nonMergeCommits.length}`);
+    commits.forEach(({ commit: { message } }) => core.info(`📦 ${message.split('\n')}`));
+    const devDependencies = await packageHelper.getDevDependencies();
+    core.info(`📦👨‍💻 Dev dependencies : ${devDependencies.join(',')}`);
+    const devDependenciesUpdate = nonMergeCommits
+        .filter(({ commit: { message } }) => message.startsWith(CommitType.DEPENDENCY_UPDATE))
+        .map(extractDependency)
+        .filter((dependency) => devDependencies.includes(dependency));
+    devDependenciesUpdate.forEach((dependency) => core.info(`📦👨‍💻 ${dependency}`));
+    if (devDependenciesUpdate.length === nonMergeCommits.length) {
+        core.info('👨‍💻 Commits contain only dev dependencies update');
+        return false;
+    }
+    const worthyReleaseFiles = files.filter((file) => !UNWORTHY_RELEASE_FILE_CHECKERS.some((fileChecker) => fileChecker.regex.test(file.filename) &&
+        (fileChecker.check ? fileChecker.check(file) : true)));
+    core.debug(`📄 Updated files: ${files.map((file) => file.filename).join(',')}`);
+    core.debug(`📄 Worthy release files: ${worthyReleaseFiles
+        .map((file) => file.filename)
+        .join(',')}`);
+    return worthyReleaseFiles.length > 0;
 }
 exports.areDiffWorthRelease = areDiffWorthRelease;
-function retrieveChangesSinceLastRelease(githubToken) {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        const { repo, owner } = github.context.repo;
-        const octokit = github.getOctokit(githubToken);
-        const { data: tags } = yield octokit.repos.listTags({
-            repo,
-            owner,
-            per_page: 1,
-        });
-        const { data: lastCommits } = yield octokit.repos.listCommits({
-            repo,
-            owner,
-        });
-        const [{ sha: head }] = lastCommits;
-        let { sha: base } = lastCommits[lastCommits.length - 1]; // good enough approximation
-        if (tags === null || tags === void 0 ? void 0 : tags.length)
-            [{ name: base }] = tags;
-        core.info(`🏷 Retrieving commits since ${base}`);
-        const { data: { commits, diff_url, files }, } = yield octokit.repos.compareCommits({ owner, repo, base, head });
-        core.info(`🔗 Diff url : ${diff_url}`);
-        return { commits, files };
+async function retrieveChangesSinceLastRelease(githubToken) {
+    const { repo, owner } = github.context.repo;
+    const octokit = github.getOctokit(githubToken);
+    const { data: tags } = await octokit.repos.listTags({
+        repo,
+        owner,
+        per_page: 1,
     });
+    const { data: lastCommits } = await octokit.repos.listCommits({
+        repo,
+        owner,
+    });
+    const [{ sha: head }] = lastCommits;
+    let { sha: base } = lastCommits[lastCommits.length - 1]; // good enough approximation
+    if (tags?.length)
+        [{ name: base }] = tags;
+    core.info(`🏷 Retrieving commits since ${base}`);
+    const { data: { commits, diff_url, files }, } = await octokit.repos.compareCommits({ owner, repo, base, head });
+    core.info(`🔗 Diff url : ${diff_url}`);
+    return { commits, files };
 }
 exports.retrieveChangesSinceLastRelease = retrieveChangesSinceLastRelease;
-function hasPendingDependencyPRsOpen(githubToken) {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        const { repo, owner } = github.context.repo;
-        const { data: openPRs } = yield github
-            .getOctokit(githubToken)
-            .pulls.list({ repo, owner, state: 'open' });
-        return openPRs.some((pr) => pr.labels.some((label) => label.name === PullRequestLabel.DEPENDENCIES));
-    });
+async function hasPendingDependencyPRsOpen(githubToken) {
+    const { repo, owner } = github.context.repo;
+    const { data: openPRs } = await github
+        .getOctokit(githubToken)
+        .pulls.list({ repo, owner, state: 'open' });
+    return openPRs.some((pr) => pr.labels.some((label) => label.name === PullRequestLabel.DEPENDENCIES));
 }
 exports.hasPendingDependencyPRsOpen = hasPendingDependencyPRsOpen;
-function isBranchBehind() {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        let isBehind = false;
-        yield exec.exec('git', ['status', '-uno'], {
-            listeners: {
-                stdout(data) {
-                    isBehind = data.toString().includes('is behind');
-                },
+async function isBranchBehind() {
+    let isBehind = false;
+    await exec.exec('git', ['status', '-uno'], {
+        listeners: {
+            stdout(data) {
+                isBehind = data.toString().includes('is behind');
             },
-        });
-        return isBehind;
+        },
     });
+    return isBehind;
 }
 function getCurrentBranch(githubRef) {
     if (!githubRef)
         throw new Error('Failed to detect branch');
     const currentBranch = /refs\/[a-zA-Z]+\/(.*)/.exec(githubRef);
-    if (!currentBranch || (currentBranch === null || currentBranch === void 0 ? void 0 : currentBranch.length) < 2) {
+    if (!currentBranch || currentBranch?.length < 2) {
         core.error(`🙊 Malformed branch ${currentBranch}`);
         throw new Error('Cannot retrieve branch name from GITHUB_REF');
     }
@@ -7408,20 +7407,18 @@ function detectBumpType(commits) {
     return bumpType;
 }
 exports.detectBumpType = detectBumpType;
-function version(bumpType, githubEmail, githubUser) {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        core.info('📒 Setting git config');
-        yield exec.exec('git', ['config', 'user.name', `"${githubUser}"`]);
-        yield exec.exec('git', ['config', 'user.email', `"${githubEmail}"`]);
-        core.info('🔖 Version patch');
-        yield exec.exec('yarn', ['version', `--${bumpType}`]);
-        if (yield isBranchBehind())
-            return false;
-        core.info('📌 Pushing release commit message and tag');
-        yield exec.exec('git', ['push']);
-        yield exec.exec('git', ['push', '--tags']);
-        return true;
-    });
+async function version(bumpType, githubEmail, githubUser) {
+    core.info('📒 Setting git config');
+    await exec.exec('git', ['config', 'user.name', `"${githubUser}"`]);
+    await exec.exec('git', ['config', 'user.email', `"${githubEmail}"`]);
+    core.info('🔖 Version patch');
+    await exec.exec('yarn', ['version', `--${bumpType}`]);
+    if (await isBranchBehind())
+        return false;
+    core.info('📌 Pushing release commit message and tag');
+    await exec.exec('git', ['push']);
+    await exec.exec('git', ['push', '--tags']);
+    return true;
 }
 exports.version = version;
 function formatCommitLine(commit) {
@@ -7455,25 +7452,23 @@ function createReleaseBody(commits) {
     return dependenciesUpdateLines + featureLines + bugLines + otherUpdatesLines;
 }
 exports.createReleaseBody = createReleaseBody;
-function release(commits, githubToken) {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        const today = new Date().toLocaleDateString('en-US', {
-            month: 'long',
-            day: '2-digit',
-            year: 'numeric',
-        });
-        const lastVersion = yield packageHelper.getCurrentVersion();
-        const { data: { id: releaseId }, } = yield github.getOctokit(githubToken).repos.createRelease({
-            owner: github.context.repo.owner,
-            repo: github.context.repo.repo,
-            tag_name: `v${lastVersion}`,
-            name: `${lastVersion} (${today})`,
-            body: createReleaseBody(commits),
-            draft: false,
-            prerelease: false,
-        });
-        core.info(`📝 Release done: ${releaseId}`);
+async function release(commits, githubToken) {
+    const today = new Date().toLocaleDateString('en-US', {
+        month: 'long',
+        day: '2-digit',
+        year: 'numeric',
     });
+    const lastVersion = await packageHelper.getCurrentVersion();
+    const { data: { id: releaseId }, } = await github.getOctokit(githubToken).repos.createRelease({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        tag_name: `v${lastVersion}`,
+        name: `${lastVersion} (${today})`,
+        body: createReleaseBody(commits),
+        draft: false,
+        prerelease: false,
+    });
+    core.info(`📝 Release done: ${releaseId}`);
 }
 exports.release = release;
 
@@ -7502,88 +7497,86 @@ exports.defaultRunOptions = {
     githubEmail: process_1.default.env.GITHUB_EMAIL || '77937117+boilerz-bot@users.noreply.github.com',
     githubUser: process_1.default.env.GITHUB_USER || 'boilerz-bot',
 };
-function run(options = exports.defaultRunOptions) {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        try {
-            if (!options.githubToken) {
-                core.setFailed(`⛔️ Missing GITHUB_TOKEN`);
-                return;
-            }
-            const contextCommits = github.context.payload.commits;
-            const [commit] = contextCommits || [];
-            const botActor = process_1.default.env.GITHUB_USER || 'boilerz-bot';
-            if (commit &&
-                contextCommits.length === 1 &&
-                commit.message.startsWith(':bookmark:') &&
-                github.context.actor === botActor) {
-                core.info(`🤖 Skipping, version commit pushed by ${botActor}`);
-                return;
-            }
-            if (core.getInput('version') !== 'true') {
-                core.warning('🚩 Skipping version (flag false), release and publish');
-                return;
-            }
-            const baseBranch = core.getInput('baseBranch');
-            const currentBranch = gitHelper.getCurrentBranch(options.githubRef);
-            if (currentBranch !== baseBranch) {
-                core.warning(`🚫 Current branch: ${currentBranch}, releasing only from ${baseBranch}`);
-                return;
-            }
-            if (yield gitHelper.hasPendingDependencyPRsOpen(options.githubToken)) {
-                core.warning('🚧 Skipping, dependencies PRs found open');
-                return;
-            }
-            core.info('✏️ Retrieving commits since last release');
-            const { commits, files } = yield gitHelper.retrieveChangesSinceLastRelease(options.githubToken);
-            if (commits.length === 0) {
-                core.info('⏩ No commit found since last release');
-                return;
-            }
-            core.info('✏️ Checking if changes worth a release');
-            if (!(yield gitHelper.areDiffWorthRelease({ commits, files }))) {
-                core.info('⏩ Skipping the release');
-                return;
-            }
-            core.info('⬆️ Detecting bump type given branch/commit');
-            const bumpType = gitHelper.detectBumpType(commits);
-            core.info(`🔖 Versioning a ${bumpType}`);
-            if (!(yield gitHelper.version(bumpType, options.githubEmail, options.githubUser))) {
-                core.info('⏩ Skipping this release, branch behind master');
-                return;
-            }
-            if (core.getInput('release') === 'true') {
-                core.info('📝 Releasing');
-                yield gitHelper.release(commits, options.githubToken);
-            }
-            const publishToNpm = core.getInput('publishToNpm') === 'true';
-            const publishToGithub = core.getInput('publishToGithub') === 'true';
-            const publish = core.getInput('publish') === 'true';
-            if (!publish || (!publishToNpm && !publishToGithub)) {
-                core.info('⏩ Skip publish');
-                return;
-            }
-            if (core.getInput('buildStep') === 'true') {
-                core.info('🛠 Extra build step');
-                yield exec.exec('yarn', ['build']);
-            }
-            core.info('📒 Setting npmrc for publish');
-            yield packageHelper.setupNpmRcForPublish();
-            const publishDirectory = core.getInput('publishDirectory');
-            const packagesPaths = yield packageHelper.listPackagePaths(publishDirectory);
-            yield Promise.all(packagesPaths.map((packagePath) => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                core.info(`📦 Trying to publish from ${packagePath}`);
-                if (publishToNpm) {
-                    yield packageHelper.publish(package_helper_1.Registry.NPM, packagePath);
-                }
-                if (publishToGithub) {
-                    yield packageHelper.publish(package_helper_1.Registry.GITHUB, packagePath);
-                }
-            })));
+async function run(options = exports.defaultRunOptions) {
+    try {
+        if (!options.githubToken) {
+            core.setFailed(`⛔️ Missing GITHUB_TOKEN`);
+            return;
         }
-        catch (error) {
-            core.setFailed(error.message);
+        const contextCommits = github.context.payload.commits;
+        const [commit] = contextCommits || [];
+        const botActor = process_1.default.env.GITHUB_USER || 'boilerz-bot';
+        if (commit &&
+            contextCommits.length === 1 &&
+            commit.message.startsWith(':bookmark:') &&
+            github.context.actor === botActor) {
+            core.info(`🤖 Skipping, version commit pushed by ${botActor}`);
+            return;
         }
-    });
+        if (core.getInput('version') !== 'true') {
+            core.warning('🚩 Skipping version (flag false), release and publish');
+            return;
+        }
+        const baseBranch = core.getInput('baseBranch');
+        const currentBranch = gitHelper.getCurrentBranch(options.githubRef);
+        if (currentBranch !== baseBranch) {
+            core.warning(`🚫 Current branch: ${currentBranch}, releasing only from ${baseBranch}`);
+            return;
+        }
+        if (await gitHelper.hasPendingDependencyPRsOpen(options.githubToken)) {
+            core.warning('🚧 Skipping, dependencies PRs found open');
+            return;
+        }
+        core.info('✏️ Retrieving commits since last release');
+        const { commits, files } = await gitHelper.retrieveChangesSinceLastRelease(options.githubToken);
+        if (commits.length === 0) {
+            core.info('⏩ No commit found since last release');
+            return;
+        }
+        core.info('✏️ Checking if changes worth a release');
+        if (!(await gitHelper.areDiffWorthRelease({ commits, files }))) {
+            core.info('⏩ Skipping the release');
+            return;
+        }
+        core.info('⬆️ Detecting bump type given branch/commit');
+        const bumpType = gitHelper.detectBumpType(commits);
+        core.info(`🔖 Versioning a ${bumpType}`);
+        if (!(await gitHelper.version(bumpType, options.githubEmail, options.githubUser))) {
+            core.info('⏩ Skipping this release, branch behind master');
+            return;
+        }
+        if (core.getInput('release') === 'true') {
+            core.info('📝 Releasing');
+            await gitHelper.release(commits, options.githubToken);
+        }
+        const publishToNpm = core.getInput('publishToNpm') === 'true';
+        const publishToGithub = core.getInput('publishToGithub') === 'true';
+        const publish = core.getInput('publish') === 'true';
+        if (!publish || (!publishToNpm && !publishToGithub)) {
+            core.info('⏩ Skip publish');
+            return;
+        }
+        if (core.getInput('buildStep') === 'true') {
+            core.info('🛠 Extra build step');
+            await exec.exec('yarn', ['build']);
+        }
+        core.info('📒 Setting npmrc for publish');
+        await packageHelper.setupNpmRcForPublish();
+        const publishDirectory = core.getInput('publishDirectory');
+        const packagesPaths = await packageHelper.listPackagePaths(publishDirectory);
+        await Promise.all(packagesPaths.map(async (packagePath) => {
+            core.info(`📦 Trying to publish from ${packagePath}`);
+            if (publishToNpm) {
+                await packageHelper.publish(package_helper_1.Registry.NPM, packagePath);
+            }
+            if (publishToGithub) {
+                await packageHelper.publish(package_helper_1.Registry.GITHUB, packagePath);
+            }
+        }));
+    }
+    catch (error) {
+        core.setFailed(error.message);
+    }
 }
 exports.default = run;
 /* istanbul ignore if */
@@ -7618,54 +7611,44 @@ var Registry;
     Registry["NPM"] = "https://registry.npmjs.org";
     Registry["GITHUB"] = "https://npm.pkg.github.com";
 })(Registry = exports.Registry || (exports.Registry = {}));
-function getPackageJson() {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        const packageJsonPath = path_1.default.resolve(process_1.default.cwd(), 'package.json');
-        core.debug(`📦 package.json path: ${packageJsonPath}`);
-        const packageData = yield readFileAsync(packageJsonPath, 'utf8');
-        return JSON.parse(packageData);
-    });
+async function getPackageJson() {
+    const packageJsonPath = path_1.default.resolve(process_1.default.cwd(), 'package.json');
+    core.debug(`📦 package.json path: ${packageJsonPath}`);
+    const packageData = await readFileAsync(packageJsonPath, 'utf8');
+    return JSON.parse(packageData);
 }
-function getCurrentVersion() {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        const { version } = yield getPackageJson();
-        return version;
-    });
+async function getCurrentVersion() {
+    const { version } = await getPackageJson();
+    return version;
 }
 exports.getCurrentVersion = getCurrentVersion;
-function getDevDependencies() {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        const { devDependencies } = yield getPackageJson();
-        return Object.keys(devDependencies || {});
-    });
+async function getDevDependencies() {
+    const { devDependencies } = await getPackageJson();
+    return Object.keys(devDependencies || {});
 }
 exports.getDevDependencies = getDevDependencies;
-function readNpmRc(filePath) {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        if (!(yield existsAsync(filePath)))
-            return null;
-        const fileRecord = {};
-        const fileContent = yield readFileAsync(filePath, 'utf8');
-        const lines = fileContent.split(os_1.default.EOL).filter((line) => line !== '');
-        lines.forEach((line) => {
-            const [key, value] = line.split('=');
-            fileRecord[key] = value;
-        });
-        return fileRecord;
+async function readNpmRc(filePath) {
+    if (!(await existsAsync(filePath)))
+        return null;
+    const fileRecord = {};
+    const fileContent = await readFileAsync(filePath, 'utf8');
+    const lines = fileContent.split(os_1.default.EOL).filter((line) => line !== '');
+    lines.forEach((line) => {
+        const [key, value] = line.split('=');
+        fileRecord[key] = value;
     });
+    return fileRecord;
 }
 exports.readNpmRc = readNpmRc;
-function writeNpmRc(filePath, fileRecord) {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        const fileContent = Object.keys(fileRecord)
-            .map((key) => `${key}=${fileRecord[key]}`)
-            .join(os_1.default.EOL);
-        yield writeFileAsync(filePath, fileContent + os_1.default.EOL, { encoding: 'utf8' });
-    });
+async function writeNpmRc(filePath, fileRecord) {
+    const fileContent = Object.keys(fileRecord)
+        .map((key) => `${key}=${fileRecord[key]}`)
+        .join(os_1.default.EOL);
+    await writeFileAsync(filePath, fileContent + os_1.default.EOL, { encoding: 'utf8' });
 }
 exports.writeNpmRc = writeNpmRc;
 function updateNpmRcForPublish(fileRecord) {
-    const updatedFileRecord = Object.assign({}, fileRecord);
+    const updatedFileRecord = { ...fileRecord };
     Object.keys(fileRecord).forEach((key) => {
         if (/.*:?registry$/.test(key)) {
             delete updatedFileRecord[key];
@@ -7677,35 +7660,29 @@ function updateNpmRcForPublish(fileRecord) {
     return updatedFileRecord;
 }
 exports.updateNpmRcForPublish = updateNpmRcForPublish;
-function setupNpmRcForPublish() {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        const npmRcFilePath = path_1.default.resolve(process_1.default.cwd(), '.npmrc');
-        const npmRcFileRecord = (yield readNpmRc(npmRcFilePath)) || {};
-        const updatedNpmRcFileRecord = yield updateNpmRcForPublish(npmRcFileRecord);
-        yield writeNpmRc(npmRcFilePath, updatedNpmRcFileRecord);
-    });
+async function setupNpmRcForPublish() {
+    const npmRcFilePath = path_1.default.resolve(process_1.default.cwd(), '.npmrc');
+    const npmRcFileRecord = (await readNpmRc(npmRcFilePath)) || {};
+    const updatedNpmRcFileRecord = await updateNpmRcForPublish(npmRcFileRecord);
+    await writeNpmRc(npmRcFilePath, updatedNpmRcFileRecord);
 }
 exports.setupNpmRcForPublish = setupNpmRcForPublish;
-function publish(registry, directory = '.') {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        core.debug(`📒 Setting config registry at ${registry}`);
-        yield exec.exec('npm', ['config', 'set', 'registry', registry]);
-        core.info(`📦 Publishing to ${registry}`);
-        yield exec.exec('npm', ['publish', directory, '--access', 'public']);
-    });
+async function publish(registry, directory = '.') {
+    core.debug(`📒 Setting config registry at ${registry}`);
+    await exec.exec('npm', ['config', 'set', 'registry', registry]);
+    core.info(`📦 Publishing to ${registry}`);
+    await exec.exec('npm', ['publish', directory, '--access', 'public']);
 }
 exports.publish = publish;
-function listPackagePaths(folderPath) {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        const dirents = yield readdirAsync(folderPath, { withFileTypes: true });
-        if (dirents.some(({ name }) => name === 'package.json')) {
-            return [folderPath];
-        }
-        const packagesPaths = yield Promise.all(dirents
-            .filter((dirent) => dirent.isDirectory())
-            .map(({ name }) => listPackagePaths(path_1.default.resolve(folderPath, name))));
-        return Array.prototype.concat(...packagesPaths);
-    });
+async function listPackagePaths(folderPath) {
+    const dirents = await readdirAsync(folderPath, { withFileTypes: true });
+    if (dirents.some(({ name }) => name === 'package.json')) {
+        return [folderPath];
+    }
+    const packagesPaths = await Promise.all(dirents
+        .filter((dirent) => dirent.isDirectory())
+        .map(({ name }) => listPackagePaths(path_1.default.resolve(folderPath, name))));
+    return Array.prototype.concat(...packagesPaths);
 }
 exports.listPackagePaths = listPackagePaths;
 

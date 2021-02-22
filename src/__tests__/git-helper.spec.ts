@@ -41,13 +41,13 @@ describe('git-helper', () => {
   describe('#getCurrentBranch', () => {
     it('should failed to detect branch without ref', () => {
       expect(
-        getCurrentBranch.bind(null, null),
+        getCurrentBranch.bind(null, undefined),
       ).toThrowErrorMatchingInlineSnapshot(`"Failed to detect branch"`);
     });
 
     it('should failed to detect branch without a well formed ref', () => {
       expect(
-        getCurrentBranch.bind(null, ['']),
+        getCurrentBranch.bind(null, 'o'),
       ).toThrowErrorMatchingInlineSnapshot(
         `"Cannot retrieve branch name from GITHUB_REF"`,
       );
