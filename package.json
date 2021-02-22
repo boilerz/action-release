@@ -16,7 +16,7 @@
     "postinstall": "husky install"
   },
   "devDependencies": {
-    "@boilerz/build-tools": "^1.4.8",
+    "@boilerz/build-tools": "^1.5.2",
     "@boilerz/eslint-config": "^2.0.9",
     "@boilerz/prettier-config": "^1.0.3",
     "@boilerz/tsconfig": "^1.3.2",
