@@ -9,6 +9,7 @@
   "private": false,
   "scripts": {
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "typecheck": "tsc -p tsconfig.typecheck.json",
     "clean": "rm -rf dist && rm -rf lib",
     "build": "yarn clean && tsc && ncc build --source-map --license licenses.txt",
     "test": "jest --coverage",
@@ -20,6 +21,7 @@
     "@boilerz/eslint-config": "^2.0.16",
     "@boilerz/prettier-config": "^1.0.3",
     "@boilerz/tsconfig": "^1.4.6",
+    "@boilerz/tsconfig-production": "^1.4.6",
     "@octokit/openapi-types": "^5.1.1",
     "@types/jest": "^26.0.20",
     "@vercel/ncc": "^0.27.0",

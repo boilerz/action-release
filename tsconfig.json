@@ -1,9 +1,9 @@
 {
-  "extends": "@boilerz/tsconfig",
+  "extends": "@boilerz/tsconfig-production",
   "compilerOptions": {
-    "rootDir": "src",
     "outDir": "lib",
-    "target": "ES2015"
+    "target": "es6",
+    "declaration": false
   },
-  "exclude": ["**/*.spec.ts", "lib"]
+  "exclude": ["node_modules", "**/*.spec.ts", "lib"]
 }
