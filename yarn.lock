@@ -350,6 +350,15 @@
     eslint-plugin-react "^7.22.0"
     eslint-plugin-react-hooks "^4.2.0"
 
+"@boilerz/jest-config@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@boilerz/jest-config/-/jest-config-1.0.5.tgz#43895d9b24d4e1f80be2cd06a75a64243a1c23fd"
+  integrity sha512-hhQQy4kJ4lWcu4l/LoJtktsuc9yLU8B1gI3kJKVpnRkqtqIPaFE6Jg8on7VRKUQ1JNnRXf2p3sw+4NR5NoDJLQ==
+  dependencies:
+    jest-config "^26.6.3"
+    lodash.omit "^4.5.0"
+    ts-jest "^26.5.2"
+
 "@boilerz/prettier-config@^1.0.3":
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/@boilerz/prettier-config/-/prettier-config-1.0.3.tgz#d84d0a3facee432c3f765bbf47d464e08a567dba"
@@ -5184,9 +5193,9 @@ yallist@^4.0.0:
   integrity sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==
 
 yargs-parser@20.x:
-  version "20.2.5"
-  resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-20.2.5.tgz#5d37729146d3f894f39fc94b6796f5b239513186"
-  integrity sha512-jYRGS3zWy20NtDtK2kBgo/TlAoy5YUuhD9/LZ7z7W4j1Fdw2cqD0xEEclf8fxc8xjD6X5Qr+qQQwCEsP8iRiYg==
+  version "20.2.6"
+  resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-20.2.6.tgz#69f920addf61aafc0b8b89002f5d66e28f2d8b20"
+  integrity sha512-AP1+fQIWSM/sMiET8fyayjx/J+JmTPt2Mr0FkrgqB4todtfa53sOsrSAcIrJRD5XS20bKUwaDIuMkWKCEiQLKA==
 
 yargs-parser@^18.1.2:
   version "18.1.3"
