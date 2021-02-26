@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "lib",
     "target": "es6",
-    "noEmit": false
+    "declaration": false
   },
   "exclude": ["node_modules", "**/*.spec.ts", "lib"]
 }
