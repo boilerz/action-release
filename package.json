@@ -22,7 +22,7 @@
     "@boilerz/jest-config": "^1.0.5",
     "@boilerz/prettier-config": "^1.0.3",
     "@boilerz/tsconfig": "^1.4.7",
-    "@boilerz/tsconfig-production": "^1.4.6",
+    "@boilerz/tsconfig-production": "^1.4.7",
     "@octokit/openapi-types": "^5.2.1",
     "@types/jest": "^26.0.20",
     "@vercel/ncc": "^0.27.0",
