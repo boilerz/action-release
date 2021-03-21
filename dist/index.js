@@ -7244,11 +7244,10 @@ function wrappy (fn, cb) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.release = exports.createReleaseBody = exports.version = exports.detectBumpType = exports.getCurrentBranch = exports.hasPendingDependencyPRsOpen = exports.retrieveChangesSinceLastRelease = exports.areDiffWorthRelease = void 0;
+exports.release = exports.createReleaseBody = exports.hasPendingDependencyPRsOpen = exports.retrieveChangesSinceLastRelease = void 0;
 const tslib_1 = __nccwpck_require__(4351);
 const os = tslib_1.__importStar(__nccwpck_require__(2087));
 const core = tslib_1.__importStar(__nccwpck_require__(2186));
-const exec = tslib_1.__importStar(__nccwpck_require__(1514));
 const github = tslib_1.__importStar(__nccwpck_require__(5438));
 const packageHelper = tslib_1.__importStar(__nccwpck_require__(3703));
 var CommitType;
@@ -7264,20 +7263,6 @@ var PullRequestLabel;
     PullRequestLabel["DEPENDENCIES"] = "dependencies";
 })(PullRequestLabel || (PullRequestLabel = {}));
 const MERGE_MESSAGE_REGEX = /.*[Mm]erge.*/;
-const UNWORTHY_RELEASE_FILE_CHECKERS = [
-    {
-        regex: /package\.json/,
-        check(file) {
-            return file.patch ? file.patch.includes('version') : false;
-        },
-    },
-    {
-        regex: /^\.?(github|husky|eslintignore|eslintrc|gitignore|yarnrc|LICENCE|README|tsconfig).*/,
-    },
-    {
-        regex: /.*\.spec\.[j|t]sx?]$/,
-    },
-];
 function completeCommitWithType(commit) {
     let type;
     switch (true) {
@@ -7299,43 +7284,6 @@ function completeCommitWithType(commit) {
     }
     return Object.assign(Object.assign({}, commit), { commit: Object.assign(Object.assign({}, commit.commit), { message: commit.commit.message.replace(`${type} `, '') }), type });
 }
-function extractDependency(commit) {
-    const { message } = commit.commit;
-    const regexResult = /^.*Bump (.*) from .*/.exec(message);
-    if (!regexResult || regexResult.length < 2) {
-        core.warning(`⚠️ Malformed bump commit message : ${message}`);
-        return '';
-    }
-    const dependency = regexResult[1];
-    core.info(`📦 Retrieved ${dependency} from message: ${message.split('\n')[0]}`);
-    return dependency;
-}
-function areDiffWorthRelease({ files, commits, }) {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        const nonMergeCommits = commits.filter(({ commit: { message } }) => !MERGE_MESSAGE_REGEX.test(message));
-        core.info(`↩️ Non merge commits found ${nonMergeCommits.length}`);
-        commits.forEach(({ commit: { message } }) => core.info(`📦 ${message.split('\n')}`));
-        const devDependencies = yield packageHelper.getDevDependencies();
-        core.info(`📦👨‍💻 Dev dependencies : ${devDependencies.join(',')}`);
-        const devDependenciesUpdate = nonMergeCommits
-            .filter(({ commit: { message } }) => message.startsWith(CommitType.DEPENDENCY_UPDATE))
-            .map(extractDependency)
-            .filter((dependency) => devDependencies.includes(dependency));
-        devDependenciesUpdate.forEach((dependency) => core.info(`📦👨‍💻 ${dependency}`));
-        if (devDependenciesUpdate.length === nonMergeCommits.length) {
-            core.info('👨‍💻 Commits contain only dev dependencies update');
-            return false;
-        }
-        const worthyReleaseFiles = files.filter((file) => !UNWORTHY_RELEASE_FILE_CHECKERS.some((fileChecker) => fileChecker.regex.test(file.filename) &&
-            (fileChecker.check ? fileChecker.check(file) : true)));
-        core.debug(`📄 Updated files: ${files.map((file) => file.filename).join(',')}`);
-        core.debug(`📄 Worthy release files: ${worthyReleaseFiles
-            .map((file) => file.filename)
-            .join(',')}`);
-        return worthyReleaseFiles.length > 0;
-    });
-}
-exports.areDiffWorthRelease = areDiffWorthRelease;
 function retrieveChangesSinceLastRelease(githubToken) {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         const { repo, owner } = github.context.repo;
@@ -7370,60 +7318,6 @@ function hasPendingDependencyPRsOpen(githubToken) {
     });
 }
 exports.hasPendingDependencyPRsOpen = hasPendingDependencyPRsOpen;
-function isBranchBehind() {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        let isBehind = false;
-        yield exec.exec('git', ['status', '-uno'], {
-            listeners: {
-                stdout(data) {
-                    isBehind = data.toString().includes('is behind');
-                },
-            },
-        });
-        return isBehind;
-    });
-}
-function getCurrentBranch(githubRef) {
-    if (!githubRef)
-        throw new Error('Failed to detect branch');
-    const currentBranch = /refs\/[a-zA-Z]+\/(.*)/.exec(githubRef);
-    if (!currentBranch || (currentBranch === null || currentBranch === void 0 ? void 0 : currentBranch.length) < 2) {
-        core.error(`🙊 Malformed branch ${currentBranch}`);
-        throw new Error('Cannot retrieve branch name from GITHUB_REF');
-    }
-    return currentBranch[1];
-}
-exports.getCurrentBranch = getCurrentBranch;
-function detectBumpType(commits) {
-    if (!commits.length)
-        throw new Error('Failed to access commits');
-    const lastCommit = commits[commits.length - 1];
-    let bumpType = 'patch';
-    const [lastCommitMessage] = lastCommit.commit.message.split(os.EOL);
-    if (lastCommitMessage.includes('minor') ||
-        lastCommitMessage.includes('feat') ||
-        lastCommitMessage.startsWith(CommitType.FEATURE)) {
-        bumpType = 'minor';
-    }
-    return bumpType;
-}
-exports.detectBumpType = detectBumpType;
-function version(bumpType, githubEmail, githubUser) {
-    return tslib_1.__awaiter(this, void 0, void 0, function* () {
-        core.info('📒 Setting git config');
-        yield exec.exec('git', ['config', 'user.name', `"${githubUser}"`]);
-        yield exec.exec('git', ['config', 'user.email', `"${githubEmail}"`]);
-        core.info('🔖 Version patch');
-        yield exec.exec('yarn', ['version', `--${bumpType}`]);
-        if (yield isBranchBehind())
-            return false;
-        core.info('📌 Pushing release commit message and tag');
-        yield exec.exec('git', ['push']);
-        yield exec.exec('git', ['push', '--tags']);
-        return true;
-    });
-}
-exports.version = version;
 function formatCommitLine(commit) {
     const [message, ...details] = commit.commit.message.split(os.EOL);
     return [
@@ -7492,7 +7386,6 @@ const tslib_1 = __nccwpck_require__(4351);
 const process_1 = tslib_1.__importDefault(__nccwpck_require__(1765));
 const core = tslib_1.__importStar(__nccwpck_require__(2186));
 const exec = tslib_1.__importStar(__nccwpck_require__(1514));
-const github = tslib_1.__importStar(__nccwpck_require__(5438));
 const gitHelper = tslib_1.__importStar(__nccwpck_require__(1107));
 const packageHelper = tslib_1.__importStar(__nccwpck_require__(3703));
 const package_helper_1 = __nccwpck_require__(3703);
@@ -7509,46 +7402,10 @@ function run(options = exports.defaultRunOptions) {
                 core.setFailed(`⛔️ Missing GITHUB_TOKEN`);
                 return;
             }
-            const contextCommits = github.context.payload.commits;
-            const [commit] = contextCommits || [];
-            const botActor = process_1.default.env.GITHUB_USER || 'boilerz-bot';
-            if (commit &&
-                contextCommits.length === 1 &&
-                commit.message.startsWith(':bookmark:') &&
-                github.context.actor === botActor) {
-                core.info(`🤖 Skipping, version commit pushed by ${botActor}`);
-                return;
-            }
-            if (core.getInput('version') !== 'true') {
-                core.warning('🚩 Skipping version (flag false), release and publish');
-                return;
-            }
-            const baseBranch = core.getInput('baseBranch');
-            const currentBranch = gitHelper.getCurrentBranch(options.githubRef);
-            if (currentBranch !== baseBranch) {
-                core.warning(`🚫 Current branch: ${currentBranch}, releasing only from ${baseBranch}`);
-                return;
-            }
-            if (yield gitHelper.hasPendingDependencyPRsOpen(options.githubToken)) {
-                core.warning('🚧 Skipping, dependencies PRs found open');
-                return;
-            }
             core.info('✏️ Retrieving commits since last release');
-            const { commits, files } = yield gitHelper.retrieveChangesSinceLastRelease(options.githubToken);
+            const { commits } = yield gitHelper.retrieveChangesSinceLastRelease(options.githubToken);
             if (commits.length === 0) {
                 core.info('⏩ No commit found since last release');
-                return;
-            }
-            core.info('✏️ Checking if changes worth a release');
-            if (!(yield gitHelper.areDiffWorthRelease({ commits, files }))) {
-                core.info('⏩ Skipping the release');
-                return;
-            }
-            core.info('⬆️ Detecting bump type given branch/commit');
-            const bumpType = gitHelper.detectBumpType(commits);
-            core.info(`🔖 Versioning a ${bumpType}`);
-            if (!(yield gitHelper.version(bumpType, options.githubEmail, options.githubUser))) {
-                core.info('⏩ Skipping this release, branch behind master');
                 return;
             }
             if (core.getInput('release') === 'true') {

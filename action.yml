@@ -14,10 +14,6 @@ inputs:
     required: false
     description: 'If `true` will run the `build` command in package.json scripts'
     default: 'false'
-  version:
-    required: false
-    description: 'Will basically turn off this action'
-    default: 'true'
   release:
     required: false
     description: 'Github release flag'

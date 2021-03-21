@@ -3,7 +3,7 @@
 [![GH CI Action](https://github.com/boilerz/action-release/workflows/CI/badge.svg)](https://github.com/boilerz/action-release/actions?query=workflow:CI)
 [![codecov](https://codecov.io/gh/boilerz/action-release/branch/master/graph/badge.svg)](https://codecov.io/gh/boilerz/action-release)
 
-> Github action for version, release and publish packages
+> Github action for release and publish packages
 
 ### Usage
 
@@ -11,8 +11,12 @@ See [action.yml](action.yml)
 
 Basic:
 ```yaml
+on:
+  push:
+    tags:
+      - 'v*'
+
   build:
-    if: "!contains(github.event.head_commit.message, ':bookmark:')" # Skip build for version commits (only use when push are triggered by a bot PAT)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
