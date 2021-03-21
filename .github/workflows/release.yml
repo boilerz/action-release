@@ -29,6 +29,8 @@ jobs:
         run: yarn
 
       - uses: boilerz/action-release@master
+        with:
+          publish: 'false'
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GH_BOILERZ_BOT_TOKEN }}
