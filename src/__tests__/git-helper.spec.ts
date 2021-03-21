@@ -153,7 +153,7 @@ describe('git-helper', () => {
           Array [
             Object {
               "base": "4",
-              "head": "1",
+              "head": "2",
               "owner": "jdoe",
               "repo": "foo",
             },
@@ -175,7 +175,7 @@ describe('git-helper', () => {
           Array [
             Object {
               "base": "v1.0.1",
-              "head": "1",
+              "head": "2",
               "owner": "jdoe",
               "repo": "foo",
             },

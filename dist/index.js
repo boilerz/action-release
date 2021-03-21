@@ -7297,7 +7297,7 @@ function retrieveChangesSinceLastRelease(githubToken) {
             repo,
             owner,
         });
-        const [{ sha: head }] = lastCommits;
+        const [, { sha: head }] = lastCommits;
         let { sha: base } = lastCommits[lastCommits.length - 1]; // good enough approximation
         core.info(`🏷 Tags found ${tags === null || tags === void 0 ? void 0 : tags.map((t) => t.name).join(',')}`);
         if ((tags === null || tags === void 0 ? void 0 : tags.length) > 1)

@@ -81,7 +81,7 @@ export async function retrieveChangesSinceLastRelease(
     owner,
   });
 
-  const [{ sha: head }] = lastCommits;
+  const [, { sha: head }] = lastCommits;
   let { sha: base } = lastCommits[lastCommits.length - 1]; // good enough approximation
   core.info(`🏷 Tags found ${tags?.map((t) => t.name).join(',')}`);
   if (tags?.length > 1) [, { name: base }] = tags;
