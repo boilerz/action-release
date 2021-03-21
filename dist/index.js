@@ -7291,7 +7291,7 @@ function retrieveChangesSinceLastRelease(githubToken) {
         const { data: tags } = yield octokit.repos.listTags({
             repo,
             owner,
-            per_page: 1,
+            per_page: 2,
         });
         const { data: lastCommits } = yield octokit.repos.listCommits({
             repo,
@@ -7299,8 +7299,9 @@ function retrieveChangesSinceLastRelease(githubToken) {
         });
         const [{ sha: head }] = lastCommits;
         let { sha: base } = lastCommits[lastCommits.length - 1]; // good enough approximation
-        if (tags === null || tags === void 0 ? void 0 : tags.length)
-            [{ name: base }] = tags;
+        core.info(`🏷 Tags found ${tags === null || tags === void 0 ? void 0 : tags.map((t) => t.name).join(',')}`);
+        if ((tags === null || tags === void 0 ? void 0 : tags.length) > 1)
+            [, { name: base }] = tags;
         core.info(`🏷 Retrieving commits since ${base}`);
         const { data: { commits, diff_url, files }, } = yield octokit.repos.compareCommits({ owner, repo, base, head });
         core.info(`🔗 Diff url : ${diff_url}`);

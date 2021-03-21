@@ -174,7 +174,7 @@ describe('git-helper', () => {
         Array [
           Array [
             Object {
-              "base": "v1.0.2",
+              "base": "v1.0.1",
               "head": "1",
               "owner": "jdoe",
               "repo": "foo",

@@ -73,7 +73,7 @@ export async function retrieveChangesSinceLastRelease(
   const { data: tags } = await octokit.repos.listTags({
     repo,
     owner,
-    per_page: 1,
+    per_page: 2,
   });
 
   const { data: lastCommits } = await octokit.repos.listCommits({
@@ -83,7 +83,8 @@ export async function retrieveChangesSinceLastRelease(
 
   const [{ sha: head }] = lastCommits;
   let { sha: base } = lastCommits[lastCommits.length - 1]; // good enough approximation
-  if (tags?.length) [{ name: base }] = tags;
+  core.info(`🏷 Tags found ${tags?.map((t) => t.name).join(',')}`);
+  if (tags?.length > 1) [, { name: base }] = tags;
 
   core.info(`🏷 Retrieving commits since ${base}`);
   const {
