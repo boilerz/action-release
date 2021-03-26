@@ -42,3 +42,25 @@ jobs:
 
       - name: Send coverage 📈
         run: yarn codecov
+
+  version:
+    needs: build
+    if: "github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, ':bookmark:')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+            token: ${{ secrets.GH_BOILERZ_BOT_TOKEN }}
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v3
+        with:
+          gpg-private-key: ${{ secrets.GH_BOILERZ_BOT_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GH_BOILERZ_BOT_GPG_PASSPHRASE }}
+          git-user-signingkey: true
+          git-commit-gpgsign: true
+
+      - uses: boilerz/action-version@master
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_BOILERZ_BOT_TOKEN }}
