@@ -21,7 +21,7 @@
     "@boilerz/eslint-config": "^2.0.20",
     "@boilerz/jest-config": "^1.0.7",
     "@boilerz/prettier-config": "^1.0.4",
-    "@boilerz/tsconfig": "^1.4.8",
+    "@boilerz/tsconfig": "^1.4.10",
     "@boilerz/tsconfig-production": "^1.4.8",
     "@octokit/openapi-types": "^6.0.0",
     "@types/jest": "^26.0.22",
