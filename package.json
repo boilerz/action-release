@@ -25,7 +25,7 @@
     "@boilerz/tsconfig-production": "^1.4.10",
     "@octokit/openapi-types": "^6.0.0",
     "@types/jest": "^26.0.22",
-    "@vercel/ncc": "^0.27.0",
+    "@vercel/ncc": "^0.28.3",
     "codecov": "^3.8.1",
     "eslint": "^7.24.0",
     "husky": "^6.0.0",
