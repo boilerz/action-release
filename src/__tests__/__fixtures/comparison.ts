@@ -94,11 +94,9 @@ export const commits = [
         ':arrow_up: Bump @boilerz/logger from 1.1.8 to 1.1.11\n\nBumps [@boilerz/logger](https://github.com/boilerz/logger) from 1.1.8 to 1.1.11.\n- [Release notes](https://github.com/boilerz/logger/releases)\n- [Commits](https://github.com/boilerz/logger/compare/v1.1.8...v1.1.11)\n\nSigned-off-by: dependabot[bot] <support@github.com>',
       tree: {
         sha: '2e516bf3ac3b5a2d5c0dbf780b4093e7cecf38c8',
-        url:
-          'https://api.github.com/repos/boilerz/super-server-auth-core/git/trees/2e516bf3ac3b5a2d5c0dbf780b4093e7cecf38c8',
+        url: 'https://api.github.com/repos/boilerz/super-server-auth-core/git/trees/2e516bf3ac3b5a2d5c0dbf780b4093e7cecf38c8',
       },
-      url:
-        'https://api.github.com/repos/boilerz/super-server-auth-core/git/commits/7f12f514ece218a16eb79b9513f6745279425f07',
+      url: 'https://api.github.com/repos/boilerz/super-server-auth-core/git/commits/7f12f514ece218a16eb79b9513f6745279425f07',
       comment_count: 0,
       verification: {
         verified: true,
@@ -109,8 +107,7 @@ export const commits = [
           'tree 2e516bf3ac3b5a2d5c0dbf780b4093e7cecf38c8\nparent b147bfe901ae3ce632c5c9e52ef3258aac09844e\nauthor dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com> 1611933168 +0000\ncommitter GitHub <noreply@github.com> 1611933168 +0000\n\n:arrow_up: Bump @boilerz/logger from 1.1.8 to 1.1.11\n\nBumps [@boilerz/logger](https://github.com/boilerz/logger) from 1.1.8 to 1.1.11.\n- [Release notes](https://github.com/boilerz/logger/releases)\n- [Commits](https://github.com/boilerz/logger/compare/v1.1.8...v1.1.11)\n\nSigned-off-by: dependabot[bot] <support@github.com>',
       },
     },
-    url:
-      'https://api.github.com/repos/boilerz/super-server-auth-core/commits/7f12f514ece218a16eb79b9513f6745279425f07',
+    url: 'https://api.github.com/repos/boilerz/super-server-auth-core/commits/7f12f514ece218a16eb79b9513f6745279425f07',
     html_url:
       'https://github.com/boilerz/super-server-auth-core/commit/7f12f514ece218a16eb79b9513f6745279425f07',
     comments_url:
@@ -169,8 +166,7 @@ export const commits = [
     parents: [
       {
         sha: 'b147bfe901ae3ce632c5c9e52ef3258aac09844e',
-        url:
-          'https://api.github.com/repos/boilerz/super-server-auth-core/commits/b147bfe901ae3ce632c5c9e52ef3258aac09844e',
+        url: 'https://api.github.com/repos/boilerz/super-server-auth-core/commits/b147bfe901ae3ce632c5c9e52ef3258aac09844e',
         html_url:
           'https://github.com/boilerz/super-server-auth-core/commit/b147bfe901ae3ce632c5c9e52ef3258aac09844e',
       },
@@ -195,11 +191,9 @@ export const commits = [
         ':twisted_rightwards_arrows: Merge pull request #263 - ⬆️ Bump @boilerz/logger from 1.1.8 to 1.1.11',
       tree: {
         sha: '72b1d3bd1189bcb02c40f85e37b082bcb74cc6fe',
-        url:
-          'https://api.github.com/repos/boilerz/super-server-auth-core/git/trees/72b1d3bd1189bcb02c40f85e37b082bcb74cc6fe',
+        url: 'https://api.github.com/repos/boilerz/super-server-auth-core/git/trees/72b1d3bd1189bcb02c40f85e37b082bcb74cc6fe',
       },
-      url:
-        'https://api.github.com/repos/boilerz/super-server-auth-core/git/commits/7c3c7ff912a979ace1abba9aef54f9d539c5dbd3',
+      url: 'https://api.github.com/repos/boilerz/super-server-auth-core/git/commits/7c3c7ff912a979ace1abba9aef54f9d539c5dbd3',
       comment_count: 0,
       verification: {
         verified: true,
@@ -210,8 +204,7 @@ export const commits = [
           'tree 72b1d3bd1189bcb02c40f85e37b082bcb74cc6fe\nparent b49c5015e31c652d55ca7be1edbde0b0a7e58ed2\nparent 7f12f514ece218a16eb79b9513f6745279425f07\nauthor boilerz-bot <77937117+boilerz-bot@users.noreply.github.com> 1611933311 +0100\ncommitter GitHub <noreply@github.com> 1611933311 +0100\n\n:twisted_rightwards_arrows: Merge pull request #263 - ⬆️ Bump @boilerz/logger from 1.1.8 to 1.1.11\n\n',
       },
     },
-    url:
-      'https://api.github.com/repos/boilerz/super-server-auth-core/commits/7c3c7ff912a979ace1abba9aef54f9d539c5dbd3',
+    url: 'https://api.github.com/repos/boilerz/super-server-auth-core/commits/7c3c7ff912a979ace1abba9aef54f9d539c5dbd3',
     html_url:
       'https://github.com/boilerz/super-server-auth-core/commit/7c3c7ff912a979ace1abba9aef54f9d539c5dbd3',
     comments_url:
@@ -266,15 +259,13 @@ export const commits = [
     parents: [
       {
         sha: 'b49c5015e31c652d55ca7be1edbde0b0a7e58ed2',
-        url:
-          'https://api.github.com/repos/boilerz/super-server-auth-core/commits/b49c5015e31c652d55ca7be1edbde0b0a7e58ed2',
+        url: 'https://api.github.com/repos/boilerz/super-server-auth-core/commits/b49c5015e31c652d55ca7be1edbde0b0a7e58ed2',
         html_url:
           'https://github.com/boilerz/super-server-auth-core/commit/b49c5015e31c652d55ca7be1edbde0b0a7e58ed2',
       },
       {
         sha: '7f12f514ece218a16eb79b9513f6745279425f07',
-        url:
-          'https://api.github.com/repos/boilerz/super-server-auth-core/commits/7f12f514ece218a16eb79b9513f6745279425f07',
+        url: 'https://api.github.com/repos/boilerz/super-server-auth-core/commits/7f12f514ece218a16eb79b9513f6745279425f07',
         html_url:
           'https://github.com/boilerz/super-server-auth-core/commit/7f12f514ece218a16eb79b9513f6745279425f07',
       },
@@ -298,11 +289,9 @@ export const commits = [
       message: ':bookmark: v1.6.13',
       tree: {
         sha: '71901bbecdf353252a6a3428f6850345874c5b92',
-        url:
-          'https://api.github.com/repos/boilerz/super-server-auth-core/git/trees/71901bbecdf353252a6a3428f6850345874c5b92',
+        url: 'https://api.github.com/repos/boilerz/super-server-auth-core/git/trees/71901bbecdf353252a6a3428f6850345874c5b92',
       },
-      url:
-        'https://api.github.com/repos/boilerz/super-server-auth-core/git/commits/8fcfd8c7aa7bd1c1dcc7457d389e5e08ee9cbe14',
+      url: 'https://api.github.com/repos/boilerz/super-server-auth-core/git/commits/8fcfd8c7aa7bd1c1dcc7457d389e5e08ee9cbe14',
       comment_count: 0,
       verification: {
         verified: true,
@@ -313,8 +302,7 @@ export const commits = [
           'tree 71901bbecdf353252a6a3428f6850345874c5b92\nparent 7c3c7ff912a979ace1abba9aef54f9d539c5dbd3\nauthor boilerz-bot <77937117+boilerz-bot@users.noreply.github.com> 1611933420 +0000\ncommitter boilerz-bot <77937117+boilerz-bot@users.noreply.github.com> 1611933420 +0000\n\n:bookmark: v1.6.13\n',
       },
     },
-    url:
-      'https://api.github.com/repos/boilerz/super-server-auth-core/commits/8fcfd8c7aa7bd1c1dcc7457d389e5e08ee9cbe14',
+    url: 'https://api.github.com/repos/boilerz/super-server-auth-core/commits/8fcfd8c7aa7bd1c1dcc7457d389e5e08ee9cbe14',
     html_url:
       'https://github.com/boilerz/super-server-auth-core/commit/8fcfd8c7aa7bd1c1dcc7457d389e5e08ee9cbe14',
     comments_url:
@@ -370,8 +358,7 @@ export const commits = [
     parents: [
       {
         sha: '7c3c7ff912a979ace1abba9aef54f9d539c5dbd3',
-        url:
-          'https://api.github.com/repos/boilerz/super-server-auth-core/commits/7c3c7ff912a979ace1abba9aef54f9d539c5dbd3',
+        url: 'https://api.github.com/repos/boilerz/super-server-auth-core/commits/7c3c7ff912a979ace1abba9aef54f9d539c5dbd3',
         html_url:
           'https://github.com/boilerz/super-server-auth-core/commit/7c3c7ff912a979ace1abba9aef54f9d539c5dbd3',
       },
