@@ -77,8 +77,10 @@ describe('git-helper', () => {
         data: { id: '42' },
       });
       jest.spyOn(github, 'getOctokit').mockReturnValue({
-        repos: {
-          createRelease: createReleaseSpy,
+        rest: {
+          repos: {
+            createRelease: createReleaseSpy,
+          },
         },
       } as unknown as InstanceType<typeof GitHub>);
       jest.spyOn(packageHelper, 'getCurrentVersion').mockResolvedValue('1.0.0');
@@ -134,10 +136,12 @@ describe('git-helper', () => {
       });
       compareCommitsSpy = jest.fn();
       jest.spyOn(github, 'getOctokit').mockReturnValue({
-        repos: {
-          listTags: listTagsSpy,
-          listCommits: listCommitsSpy,
-          compareCommits: compareCommitsSpy,
+        rest: {
+          repos: {
+            listTags: listTagsSpy,
+            listCommits: listCommitsSpy,
+            compareCommits: compareCommitsSpy,
+          },
         },
       } as unknown as InstanceType<typeof GitHub>);
     });
@@ -191,8 +195,10 @@ describe('git-helper', () => {
     beforeEach(() => {
       listSpy = jest.fn();
       jest.spyOn(github, 'getOctokit').mockReturnValue({
-        pulls: {
-          list: listSpy,
+        rest: {
+          pulls: {
+            list: listSpy,
+          },
         },
       } as unknown as InstanceType<typeof GitHub>);
     });
