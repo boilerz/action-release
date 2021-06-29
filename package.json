@@ -23,7 +23,7 @@
     "@boilerz/prettier-config": "^1.0.4",
     "@boilerz/tsconfig": "^1.4.12",
     "@boilerz/tsconfig-production": "^1.4.12",
-    "@octokit/openapi-types": "^7.3.2",
+    "@octokit/openapi-types": "^7.4.0",
     "@types/jest": "^26.0.23",
     "@vercel/ncc": "^0.27.0",
     "codecov": "^3.8.2",
