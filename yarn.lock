@@ -672,10 +672,10 @@
     "@octokit/types" "^6.0.3"
     universal-user-agent "^6.0.0"
 
-"@octokit/openapi-types@^10.1.1":
-  version "10.1.1"
-  resolved "https://registry.yarnpkg.com/@octokit/openapi-types/-/openapi-types-10.1.1.tgz#74607482d193e9c9cc7e23ecf04b1bde3eabb6d8"
-  integrity sha512-ygp/6r25Ezb1CJuVMnFfOsScEtPF0zosdTJDZ7mZ+I8IULl7DP1BS5ZvPRwglcarGPXOvS5sHdR0bjnVDDfQdQ==
+"@octokit/openapi-types@^10.6.4":
+  version "10.6.4"
+  resolved "https://registry.yarnpkg.com/@octokit/openapi-types/-/openapi-types-10.6.4.tgz#c8b5b1f5c60ab7c62858abe2ef57bc709f426a30"
+  integrity sha512-JVmwWzYTIs6jACYOwD6zu5rdrqGIYsiAsLzTCxdrWIPNKNVjEF6vPTL20shmgJ4qZsq7WPBcLXLsaQD+NLChfg==
 
 "@octokit/openapi-types@^3.3.0":
   version "3.4.1"
