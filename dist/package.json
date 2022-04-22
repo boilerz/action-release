@@ -1,0 +1,48 @@
+{
+  "name": "@boilerz/action-release",
+  "version": "1.2.11",
+  "main": "src/main.ts",
+  "repository": "git@github.com:boilerz/action-release.git",
+  "author": "boilerz",
+  "description": "Github action for version, release and publish packages",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "typecheck": "tsc -p tsconfig.typecheck.json",
+    "clean": "rm -rf dist && rm -rf lib",
+    "build": "yarn clean && tsc && ncc build --source-map --license licenses.txt",
+    "test": "jest --coverage",
+    "codecov": "codecov",
+    "postinstall": "husky install"
+  },
+  "devDependencies": {
+    "@boilerz/build-tools": "^1.5.8",
+    "@boilerz/eslint-config": "^2.0.38",
+    "@boilerz/jest-config": "^1.0.11",
+    "@boilerz/prettier-config": "^1.0.4",
+    "@boilerz/tsconfig": "^1.4.14",
+    "@boilerz/tsconfig-production": "^1.4.14",
+    "@octokit/openapi-types": "^10.1.1",
+    "@types/jest": "^27.4.1",
+    "@vercel/ncc": "^0.33.4",
+    "codecov": "^3.8.3",
+    "eslint": "^7.32.0",
+    "husky": "^7.0.4",
+    "jest": "^27.5.1",
+    "mockdate": "^3.0.5",
+    "prettier": "^2.6.2",
+    "typescript": "^4.6.3"
+  },
+  "dependencies": {
+    "@actions/core": "^1.6.0",
+    "@actions/exec": "^1.1.1",
+    "@actions/github": "^5.0.1"
+  },
+  "resolutions": {
+    "node-notifier": "^9.0.0"
+  },
+  "pre-commit": {
+    "run": "clean, build, package"
+  }
+}
