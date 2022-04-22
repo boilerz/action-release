@@ -19,7 +19,7 @@
   "devDependencies": {
     "@boilerz/build-tools": "^1.5.8",
     "@boilerz/eslint-config": "^2.0.38",
-    "@boilerz/jest-config": "^1.0.9",
+    "@boilerz/jest-config": "^1.0.11",
     "@boilerz/prettier-config": "^1.0.4",
     "@boilerz/tsconfig": "^1.4.14",
     "@boilerz/tsconfig-production": "^1.4.14",
@@ -29,7 +29,7 @@
     "codecov": "^3.8.3",
     "eslint": "^7.32.0",
     "husky": "^7.0.4",
-    "jest": "^26.6.3",
+    "jest": "^27.5.1",
     "mockdate": "^3.0.5",
     "prettier": "^2.6.2",
     "typescript": "^4.3.5"
