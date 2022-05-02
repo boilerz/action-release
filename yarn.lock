@@ -399,10 +399,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@boilerz/build-tools@^1.5.1", "@boilerz/build-tools@^1.5.10":
-  version "1.5.10"
-  resolved "https://registry.yarnpkg.com/@boilerz/build-tools/-/build-tools-1.5.10.tgz#e590150ed8d1c45184212de0b6111514c307959a"
-  integrity sha512-Z3uhuoN/2x6OzwnowKvFz9ZkzrtD4Yu9mNrU7cdxqglbYQaA9ymwWNYH4kSTSijhthCPCaJ5ci5CWw9iENjzbQ==
+"@boilerz/build-tools@^1.5.1", "@boilerz/build-tools@^1.5.11":
+  version "1.5.11"
+  resolved "https://registry.yarnpkg.com/@boilerz/build-tools/-/build-tools-1.5.11.tgz#bcbca42db6654658fc060d35991cd87c52e71117"
+  integrity sha512-xb8lFlLElat+oHVxbCm2x1vZrlmppmk2db7wVXYkXC7nTxIMNV/+k0l56p6vymoE97lgPpXaWnPMQZOYiAeuEA==
   dependencies:
     "@boilerz/build-tools" "^1.5.1"
     lodash.omit "^4.5.0"
