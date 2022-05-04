@@ -423,14 +423,14 @@
     eslint-plugin-react "^7.28.0"
     eslint-plugin-react-hooks "^4.3.0"
 
-"@boilerz/jest-config@^1.0.15":
-  version "1.0.15"
-  resolved "https://registry.yarnpkg.com/@boilerz/jest-config/-/jest-config-1.0.15.tgz#f17550770431be010fbca1dea331d701a2440729"
-  integrity sha512-lh1uIlPqAZ6ZDyzWwC5ml8UuX9UiAi4iDPnTXi6hZ4UHBIZNVbWFfOwrRs3dpUsO9RkLa9TrBP3sa3N3KCds9w==
+"@boilerz/jest-config@^1.0.16":
+  version "1.0.16"
+  resolved "https://registry.yarnpkg.com/@boilerz/jest-config/-/jest-config-1.0.16.tgz#b7a2456ffde8d3e5a1e059ef411edab99f4c1c34"
+  integrity sha512-aeOJzKnGn7MdDS848u0N7tz6uOrOAbIQIUgTXremyF8hefUBVQDmFABkNKhu0RjPlcNZm33kC8SmVOQsrKlYFQ==
   dependencies:
     jest-config "^28.0.3"
     lodash.omit "^4.5.0"
-    ts-jest "^28.0.0"
+    ts-jest "^28.0.1"
 
 "@boilerz/prettier-config@^1.0.4":
   version "1.0.4"
@@ -3989,10 +3989,10 @@ tr46@~0.0.3:
   resolved "https://registry.yarnpkg.com/tr46/-/tr46-0.0.3.tgz#8184fd347dac9cdc185992f3a6622e14b9d9ab6a"
   integrity sha1-gYT9NH2snNwYWZLzpmIuFLnZq2o=
 
-ts-jest@^28.0.0:
-  version "28.0.0"
-  resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-28.0.0.tgz#8a696cd1696c471154f7f0c81184ac99b526f400"
-  integrity sha512-JOUGExRO4vNaQdc920/sJjFZxe9lBGa6WIuNWkvtZoORGI9dyHTBqhuaJUdBVWIfqj+vaK3TRt/B1T0hQ0ROaA==
+ts-jest@^28.0.1:
+  version "28.0.1"
+  resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-28.0.1.tgz#626b4d7d5c386f88f4813d959ffc4ca0a8ffef96"
+  integrity sha512-PbkbitaT/9ZYAqqzk3UYTvCq080Seo46T3m/AdwcZ0D8WH2uBhG6PvA8oOAWsZIknzPQU66fYobvFCL8IqIhmg==
   dependencies:
     bs-logger "0.x"
     fast-json-stable-stringify "2.x"
