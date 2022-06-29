@@ -29,7 +29,7 @@
     "codecov": "^3.8.3",
     "eslint": "^7.32.0",
     "husky": "^8.0.1",
-    "jest": "^28.1.1",
+    "jest": "^28.1.2",
     "mockdate": "^3.0.5",
     "prettier": "^2.7.1",
     "typescript": "^4.7.4"
